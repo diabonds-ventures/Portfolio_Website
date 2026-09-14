@@ -1,0 +1,147 @@
+/* Base Reset */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: #F4F3ED; /* The warm off-white background */
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #1A1A1A;
+  padding: 2.5rem 4rem;
+  height: 100vh;
+}
+
+/* Navigation */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8rem;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-circle {
+  width: 18px;
+  height: 18px;
+  background-color: #C8F33D; /* Neon green */
+  border: 2px solid #1A1A1A;
+  border-radius: 50%;
+}
+
+.logo-text {
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 2.5rem;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: #1A1A1A;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* Hero Typography */
+.hero-title {
+  font-size: 6.5rem;
+  line-height: 1.05;
+  font-weight: 400;
+  letter-spacing: -1.5px;
+  margin-bottom: 5rem;
+}
+
+/* Bottom Grid (Text + Card) */
+.hero-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.hero-text {
+  max-width: 450px;
+}
+
+.hero-text p {
+  font-size: 1.35rem;
+  line-height: 1.5;
+  color: #222;
+  margin-bottom: 2.5rem;
+}
+
+.scroll-link {
+  text-decoration: none;
+  color: #666;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+}
+
+/* The Dark Summary Card */
+.summary-card {
+  background-color: #262626;
+  color: white;
+  border-radius: 24px;
+  padding: 3rem;
+  width: 520px;
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.card-label {
+  color: #C8F33D;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.badge {
+  background-color: #C8F33D;
+  color: #1A1A1A;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.card-value {
+  font-size: 5rem;
+  font-weight: 400;
+  letter-spacing: -1.5px;
+  margin-bottom: 2.5rem;
+}
+
+.card-stats {
+  display: flex;
+  gap: 4rem;
+}
+
+.stat-label {
+  display: block;
+  color: #999;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.stat-val {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
