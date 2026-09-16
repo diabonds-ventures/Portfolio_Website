@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client Login | Dia Ventures</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  
+  <!-- The Navigation -->
+  <nav class="navbar">
+    <a href="index.html" class="logo">
+      <div class="logo-circle"></div>
+      <span class="logo-text">DIABONDS VENTURES</span>
+    </a>
+    <div class="nav-links">
+      <a href="./dashboard.html">Dashboard</a>
+      <a href="./portfolios.html">Portfolios</a>
+    </div>
+  </nav>
+
+  <!-- The Login Gateway -->
+  <main class="login-wrapper">
+    
+    <div class="summary-card login-card">
+      <span class="card-label">SECURE CLIENT PORTAL</span>
+      
+      <!-- We leave a placeholder name here for layout testing -->
+      <h2 class="login-title" id="welcome-message">Welcome, Client</h2>
+
+      <form id="login-form">
+        <!-- NEW: Username field (Hidden by default using JS if they came from the roster) -->
+        <input 
+          type="text" 
+          id="username-input" 
+          class="pin-input" 
+          placeholder="Enter Client ID (e.g., rahul)" 
+          autocomplete="off"
+        >
+      
+      <form id="login-form">
+        <input 
+          type="password" 
+          id="pin-input" 
+          class="pin-input" 
+          placeholder="Enter 4-Digit PIN" 
+          autocomplete="off" 
+          required
+        >
+        <p id="error-message" class="error-msg"></p>
+        
+        <button type="submit" class="login-btn">Unlock Portfolio &rarr;</button>
+      </form>
+    </div>
+
+  </main>
+<script src="./index.js"></script>
+</body>
+</html>

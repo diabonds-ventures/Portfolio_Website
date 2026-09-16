@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolios | Dia Ventures</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  
+  <!-- Paste the exact same <nav> from your index.html here -->
+  <nav class="navbar">
+    <a href="index.html" class="logo">
+      <div class="logo-circle"></div>
+      <span class="logo-text">DIABONDS VENTURES</span>
+    </a>
+    <div class="nav-links">
+      <a href="./dashboard.html">Dashboard</a>
+      <a href="./login.html">Login</a>
+    </div>
+  </nav>
+
+  <!-- The Public Roster -->
+  <!-- The Public Roster (Table Layout) -->
+  <main class="portfolio-section">
+    <h2 class="page-title">Portfolios</h2>
+    
+    <div class="data-table">
+      
+      <!-- Table Headers -->
+      <div class="table-header">
+        <span>Name</span>
+        <span>1D %</span>
+        <span>1W %</span>
+        <span>1M %</span>
+        <span>MAX %</span>
+        <span>MODE</span>
+        <span>TREND</span>
+      </div>
+
+      <!-- Client Row: Rahul -->
+      <a href="login.html?client=rahul" class="table-row">
+        <span class="client-name">Rahul</span>
+        <span class="text-red">-5%</span>
+        <span class="text-green">+12%</span>
+        <span class="text-green">+25%</span>
+        <span class="text-black">---</span>
+        <span class="text-red">Agressive</span>
+        <div class="trend-placeholder">📈</div> <!-- We will replace this with a real sparkline later -->
+      </a>
+
+      <!-- Client Row: Ashwin -->
+      <a href="login.html?client=ashwin" class="table-row">
+        <span class="client-name">Ashwin</span>
+        <span class="text-green">+10%</span>
+        <span class="text-green">+12%</span>
+        <span class="text-red">-5%</span>
+        <span class="text-black">---</span>
+        <span class="text-yellow">Moderate</span>
+        <div class="trend-placeholder">📈</div>
+      </a>
+
+    </div>
+  </main>
+  <!-- We will connect the app.js later to update those percentages -->
+  <!-- <script src="app.js"></script> -->
+</body>
+</html>

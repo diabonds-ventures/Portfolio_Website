@@ -145,3 +145,158 @@ body {
   font-size: 1.5rem;
   font-weight: 600;
 }
+
+a{
+  text-decoration: none; 
+  color: inherit;
+}
+
+/* --- Portfolios Page Layout --- */
+
+.portfolio-section {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.page-title {
+  font-size: 2rem;
+  text-decoration: underline;
+  text-underline-offset: 8px;
+  text-decoration-thickness: 3px;
+  margin-bottom: 3rem;
+}
+
+/* The CSS Grid that aligns the columns */
+.table-header, .table-row {
+  display: grid;
+  /* Proportions for the 7 columns: Name gets 1.5, percentages get 1, Trend gets 1.5 */
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr 1.5fr 1.5fr;
+  align-items: center;
+  padding: 0 2rem;
+}
+
+/* Header text styling */
+.table-header {
+  color: #666;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+/* The clickable white rows */
+.table-row {
+  background-color: #F8F9FB; /* Very light blue/white */
+  border-radius: 30px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 1.2rem;
+  text-decoration: none; /* Removes link underline */
+  color: inherit;
+  font-weight: 700;
+  font-size: 1.2rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Make it pop slightly when hovered */
+.table-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+}
+
+/* Utility Colors for the text */
+.text-green { color: #16A34A; }
+.text-red { color: #DC2626; }
+.text-yellow { color: #FBBF24; }
+.text-black { color: #1A1A1A; }
+
+.client-name {
+  color: #000;
+}
+
+/* Align all columns to the center by default */
+.table-header > *, 
+.table-row > * {
+  text-align: center;
+}
+
+/* Override the first column (Name) to stay left-aligned */
+.table-header > *:first-child, 
+.table-row > *:first-child {
+  text-align: left;
+}
+
+/* --- Login Page Layout --- */
+
+/* Center the login box perfectly on the screen */
+.login-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* Takes the full height of the viewport minus the navbar height */
+  height: calc(100vh - 150px); 
+}
+
+/* Adjust the dimensions of the reused dark card for the login form */
+.login-card {
+  width: 420px;
+  text-align: center;
+  padding: 3.5rem 2.5rem;
+}
+
+.login-title {
+  font-size: 2.2rem;
+  font-weight: 400;
+  margin: 1rem 0 2.5rem 0;
+  letter-spacing: -1px;
+}
+
+/* The PIN Input Field */
+.pin-input {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1.2rem;
+  text-align: center;
+  letter-spacing: 4px; /* Spaces out the PIN dots nicely */
+  background-color: #1A1A1A; /* Darker than the card to look inset */
+  border: 1px solid #444;
+  color: white;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.pin-input:focus {
+  border-color: #C8F33D; /* Neon green highlight on focus */
+}
+
+/* The Submit Button */
+.login-btn {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: 700;
+  background-color: #C8F33D; /* Neon green */
+  color: #1A1A1A;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.login-btn:hover {
+  opacity: 0.9;
+}
+
+.login-btn:active {
+  transform: scale(0.98); /* Slight click effect */
+}
+
+/* The Error Message Area */
+.error-msg {
+  color: #DC2626; /* Red */
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  /* Min-height ensures the button doesn't jump down when an error appears */
+  min-height: 20px; 
+}
