@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Portfolio | Dia Ventures</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="logo">
+      <div class="logo-circle"></div>
+      <span class="logo-text" id="client-greeting">Welcome, Client</span>
+    </div>
+    <div class="nav-links">
+      <a href="#" id="logout-btn" style="color: #DC2626;">Secure Logout</a>
+    </div>
+  </nav>
+
+  <main>
+    <!-- Top Section: Full Width Dark Card -->
+    <div class="summary-card" style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 3rem 4rem; margin-bottom: 2rem;">
+      
+      <!-- Left side: Value -->
+      <div>
+        <div class="card-top" style="justify-content: flex-start; gap: 1rem; margin-bottom: 1rem;">
+          <span class="card-label">CURRENT PORTFOLIO VALUE</span>
+          <span class="badge" id="client-strategy">Strategy</span>
+        </div>
+        <h2 class="card-value" id="client-gross-value" style="margin-bottom: 0;">₹0.00</h2>
+        <div style="margin-top: 1rem; color: #888; font-size: 0.95rem; font-weight: 600;">
+          Net Withdrawal (After 5% Fee): <span id="client-net-value" style="color: #fff; margin-left: 8px;">₹0.00</span>
+        </div>
+      </div>
+
+      <!-- Right side: Metrics -->
+      <div class="card-stats" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem;">
+        <div>
+          <span class="stat-label">1D RETURN</span>
+          <span class="stat-val" id="client-1d">--%</span>
+        </div>
+        <div>
+          <span class="stat-label">1W RETURN</span>
+          <span class="stat-val" id="client-1w">--%</span>
+        </div>
+        <div>
+          <span class="stat-label">1M RETURN</span>
+          <span class="stat-val" id="client-1m">--%</span>
+        </div>
+        <div>
+          <span class="stat-label">ALL TIME</span>
+          <span class="stat-val" id="client-max">--%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Section: Charts -->
+    <div class="client-charts-grid">
+      <div class="chart-box">
+        <h3 class="stat-label" style="color: #1A1A1A; margin-bottom: 1.5rem;">PERFORMANCE HISTORY</h3>
+        <div class="canvas-wrapper">
+          <canvas id="client-line-chart"></canvas>
+        </div>
+      </div>
+      
+      <div class="chart-box">
+        <h3 class="stat-label" style="color: #1A1A1A; margin-bottom: 1.5rem;">ASSET ALLOCATION</h3>
+        <div class="canvas-wrapper">
+          <canvas id="client-allocation-chart"></canvas>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
