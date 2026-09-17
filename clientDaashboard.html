@@ -75,6 +75,30 @@
         </div>
       </div>
     </div>
+    <!-- =====================================
+       ASSET HOLDINGS TABLE (FULL WIDTH)
+       ===================================== -->
+  <section style="max-width: 1200px; margin: 2rem auto 5rem auto; padding: 0 2rem; width: 100%; box-sizing: border-box; clear: both;">
+    <div style="background-color: #fff; border-radius: 24px; padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.03); width: 100%;">
+      
+      <!-- Header Controls -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 class="page-title" style="margin: 0; font-size: 1.5rem; text-decoration: none;">Portfolio Holdings</h2>
+        <button id="client-view-toggle-btn" class="institutional-btn">View Detailed Assets</button>
+      </div>
+
+      <!-- Dynamic Table Header -->
+      <div id="client-table-header-container">
+        <!-- Injected via JavaScript -->
+      </div>
+      
+      <!-- Scrollable container for the rows -->
+      <div id="client-assets-container" class="custom-scrollbar" style="overflow-y: auto; max-height: 400px; padding-right: 10px;">
+        <!-- JavaScript will inject the asset rows here -->
+      </div>
+
+    </div>
+  </section>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>

@@ -546,3 +546,26 @@ body {
   /* FIX: Adds plenty of breathing room below the fixed navbar */
   padding-top: 140px !important; 
 }
+
+/* =========================================
+   CLIENT PORTAL TABLE GRIDS (WITH VALUE)
+   ========================================= */
+.client-macro-table-grid {
+  display: grid !important;
+  /* Columns: Rank, Class, Value, Allocation */
+  grid-template-columns: 0.8fr 3fr 2.5fr 3.5fr !important; 
+  width: 100% !important;
+  align-items: center !important;
+}
+
+.client-detailed-table-grid {
+  display: grid !important;
+  /* Columns: Rank, Name, Class, Value, Allocation */
+  grid-template-columns: 0.8fr 3fr 2.5fr 2.5fr 3.5fr !important; 
+  width: 100% !important;
+  align-items: center !important;
+}
+
+.client-macro-table-grid > *, .client-detailed-table-grid > * {
+  min-width: 0 !important;
+}
