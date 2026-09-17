@@ -153,6 +153,8 @@ a{
 
 /* --- Portfolios Page Layout --- */
 
+/* --- Portfolios Page Layout --- */
+
 .portfolio-section {
   max-width: 1000px;
   margin: 0 auto;
@@ -166,63 +168,60 @@ a{
   margin-bottom: 3rem;
 }
 
-/* The CSS Grid that aligns the columns */
+/* 1. MASTER GRID: Forces perfectly aligned 6 columns */
 .table-header, .table-row {
-  display: grid;
-  /* Proportions for the 7 columns: Name gets 1.5, percentages get 1, Trend gets 1.5 */
-  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr 1.5fr 1.5fr;
+  display: grid !important;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1.5fr !important;
   align-items: center;
+  width: 100%;
   padding: 0 2rem;
 }
 
-/* Header text styling */
 .table-header {
   color: #666;
   font-size: 1.1rem;
   margin-bottom: 1rem;
 }
 
-/* The clickable white rows */
+/* 2. THE WHITE ROWS */
 .table-row {
-  background-color: #F8F9FB; /* Very light blue/white */
+  background-color: #F8F9FB; 
   border-radius: 30px;
-  padding: 1.5rem 2rem;
+  padding: 1.2rem 2rem; /* Slightly slimmer for a sleek look */
   margin-bottom: 1.2rem;
-  text-decoration: none; /* Removes link underline */
+  text-decoration: none; 
   color: inherit;
   font-weight: 700;
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Make it pop slightly when hovered */
 .table-row:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 20px rgba(0,0,0,0.05);
 }
 
-/* Utility Colors for the text */
-.text-green { color: #16A34A; }
-.text-red { color: #DC2626; }
-.text-yellow { color: #FBBF24; }
-.text-black { color: #1A1A1A; }
-
-.client-name {
-  color: #000;
-}
-
-/* Align all columns to the center by default */
+/* 3. ALIGNMENT RULES */
 .table-header > *, 
 .table-row > * {
   text-align: center;
 }
 
-/* Override the first column (Name) to stay left-aligned */
+/* Keep the Client Name aligned to the left edge */
 .table-header > *:first-child, 
 .table-row > *:first-child {
   text-align: left;
 }
 
+/* 4. SPARKLINE CONTAINER */
+.sparkline-container {
+  width: 100%;
+  height: 35px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 /* --- Login Page Layout --- */
 
 /* Center the login box perfectly on the screen */
@@ -323,4 +322,71 @@ a{
   position: relative;
   width: 100%;
   height: 100%;
+}
+
+/* --- Institutional Loading Screen --- */
+#global-loader {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-color: #F4F3ED; /* Matches your background */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  transition: opacity 0.4s ease;
+}
+
+.spinner {
+  width: 40px; height: 40px;
+  border: 4px solid #1A1A1A;
+  border-top-color: #C8F33D;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin { 
+  100% { transform: rotate(360deg); } 
+}
+
+.loader-text {
+  font-weight: 600;
+  letter-spacing: 2px;
+  font-size: 0.85rem;
+  color: #1A1A1A;
+}
+
+/* =========================================
+   THE FINAL GRID & COLOR OVERRIDE
+   ========================================= */
+
+/* 1. Force the colors to overpower the clickable <a> link */
+.text-green { color: #16A34A !important; }
+.text-red { color: #DC2626 !important; }
+
+/* 2. The Indestructible Master Grid */
+.dia-grid {
+  display: grid !important;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1.5fr !important;
+  width: 100% !important;
+  align-items: center !important;
+}
+
+/* 3. The Magic "Canvas Restraint" Fix */
+.dia-grid > * {
+  text-align: center !important;
+  min-width: 0 !important; /* CRITICAL: Forces the chart to never stretch the column */
+}
+
+.dia-grid > *:first-child {
+  text-align: left !important;
+}
+
+/* 4. Tame the Sparkline Container */
+.sparkline-container {
+  width: 100%;
+  height: 35px;
+  position: relative;
+  min-width: 0;
 }

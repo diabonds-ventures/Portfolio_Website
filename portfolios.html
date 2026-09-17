@@ -7,64 +7,49 @@
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
-  
-  <!-- Paste the exact same <nav> from your index.html here -->
+
+  <!-- 1. The Loading Screen -->
+  <div id="global-loader">
+    <div class="spinner"></div>
+    <div class="loader-text">SYNCING LEDGER...</div>
+  </div>
+
+  <!-- 2. Navigation -->
   <nav class="navbar">
-    <a href="index.html" class="logo">
+    <a href="./index.html" class="logo">
       <div class="logo-circle"></div>
       <span class="logo-text">DIABONDS VENTURES</span>
     </a>
     <div class="nav-links">
-      <a href="./firm.html">Dashboard</a>
-      <a href="./login.html">Login</a>
+      <a href="firm.html">Firm Dashboard</a>
+      <a href="portfolios.html">Portfolios</a>
+      <a href="login.html">Client Login</a>
     </div>
   </nav>
 
-  <!-- The Public Roster -->
-  <!-- The Public Roster (Table Layout) -->
+  <!-- 3. Main Content Area -->
   <main class="portfolio-section">
-    <h2 class="page-title">Portfolios</h2>
+    <h1 class="page-title">Portfolios</h1>
     
-    <div class="data-table">
-      
-      <!-- Table Headers -->
-      <div class="table-header">
-        <span>Name</span>
-        <span>1D %</span>
-        <span>1W %</span>
-        <span>1M %</span>
-        <span>MAX %</span>
-        <span>MODE</span>
-        <span>TREND</span>
-      </div>
-
-      <!-- Client Row: Institution -->
-      <a href="login.html?client=Diabonds_Ventures" class="table-row">
-        <span class="client-name">Diabonds Ventures</span>
-        <span class="text-red">-5%</span>
-        <span class="text-green">+12%</span>
-        <span class="text-green">+25%</span>
-        <span class="text-black">---</span>
-        <span class="text-red">Agressive</span>
-        <div class="trend-placeholder">📈</div> <!-- We will replace this with a real sparkline later -->
-      </a>
-
-      <!-- Client Row: Ashwin -->
-      <a href="login.html?client=ashwin" class="table-row">
-        <span class="client-name">Ashwin</span>
-        <span class="text-green">+10%</span>
-        <span class="text-green">+12%</span>
-        <span class="text-red">-5%</span>
-        <span class="text-black">---</span>
-        <span class="text-yellow">Moderate</span>
-        <div class="trend-placeholder">📈</div>
-      </a>
-
+    <!-- The Column Headers -->
+    <div class="table-header dia-grid">
+      <div>Name</div>
+      <div>1D %</div>
+      <div>1W %</div>
+      <div>1M %</div>
+      <div>MAX %</div>  
+      <div>TREND</div>
     </div>
-      <script src="./app.js"></script>
+
+    <!-- The Drop Zone for JavaScript -->
+    <div id="portfolio-rows-container">
+      <!-- JavaScript will automatically generate the <a class="table-row"> blocks and put them here -->
+    </div>
+    
   </main>
-  <!-- We will connect the app.js later to update those percentages -->
-  <!-- <script src="app.js"></script> -->
- 
+
+  <!-- 4. Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
