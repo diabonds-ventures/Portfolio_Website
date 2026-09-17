@@ -21,50 +21,90 @@
     </div>
   </nav>
 
-  <!-- Reusing your hero layout for a split-screen look -->
-  <main class="hero-bottom" style="align-items: center;">
+<!-- =====================================
+       TOP SECTION: TOTAL PERFORMANCE
+       ===================================== -->
+  <main style="max-width: 1200px; margin: 0 auto 4rem auto; padding: 0 2rem;">
     
-    <!-- Left Side: Chart -->
-    <div class="hero-text" style="flex-grow: 1; padding-right: 4rem; max-width: none;">
-      <h1 class="hero-title" style="font-size: 4.5rem; margin-bottom: 2rem;">Total<br>Performance</h1>
-      <div style="height: 380px; width: 100%; background: #fff; border-radius: 24px; padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.03);">
+    <!-- Centered Heading -->
+    <h1 class="hero-title" style="font-size: 3.5rem; margin-top: 0; margin-bottom: 2.5rem; text-align: center; line-height: 1.2;">Total Performance</h1>
+    
+    <!-- PERFECT GRID: Left side gets 1.8x space (Chart), Right side gets 1x space (Stats) -->
+    <div style="display: grid; grid-template-columns: 1.8fr 1fr; gap: 3rem; height: 320px;">
+      
+      <!-- Left Column: Chart -->
+      <div style="height: 100%; width: 100%; background: #fff; border-radius: 24px; padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.03); box-sizing: border-box;">
         <canvas id="firm-chart"></canvas>
       </div>
-    </div>
 
-    <!-- Right Side: Dark Summary Card -->
-    <div class="summary-card">
-      <div class="card-top">
-        <span class="card-label">TOTAL FIRM AUM</span>
-        <span class="badge">LIVE</span>
+      <!-- Right Column: Dark Summary Card (Only Percentages) -->
+      <div class="summary-card" style="margin: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; padding: 3rem;">
+        
+        <div class="card-stats" style="display: grid; grid-template-columns: 1fr 1fr; gap: 3rem 1.5rem;">
+          <div>
+            <span class="stat-label">1D RETURN</span>
+            <span class="stat-val text-green" id="firm-1d" style="font-size: 2.2rem; margin-top: 0.5rem; display: block;">--%</span>
+          </div>
+          <div>
+            <span class="stat-label">1W RETURN</span>
+            <span class="stat-val text-green" id="firm-1w" style="font-size: 2.2rem; margin-top: 0.5rem; display: block;">--%</span>
+          </div>
+          <div>
+            <span class="stat-label">1M RETURN</span>
+            <span class="stat-val" id="firm-1m" style="font-size: 2.2rem; margin-top: 0.5rem; display: block;">--%</span>
+          </div>
+          <div>
+            <span class="stat-label">ALL TIME</span>
+            <span class="stat-val" id="firm-max" style="font-size: 2.2rem; margin-top: 0.5rem; display: block;">--%</span>
+          </div>
+        </div>
+
       </div>
       
-      <h2 class="card-value" id="firm-total-aum">₹0.00</h2>
-      
-      <!-- Overriding the flex layout to a 2x2 grid for the 4 metrics -->
-      <div class="card-stats" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-        <div>
-          <span class="stat-label">1D RETURN</span>
-          <span class="stat-val text-green" id="firm-1d">--%</span>
-        </div>
-        <div>
-          <span class="stat-label">1W RETURN</span>
-          <span class="stat-val text-green" id="firm-1w">--%</span>
-        </div>
-        <div>
-          <span class="stat-label">1M RETURN</span>
-          <span class="stat-val" id="firm-1m">--%</span>
-        </div>
-        <div>
-          <span class="stat-label">ALL TIME</span>
-          <span class="stat-val" id="firm-max">--%</span>
-        </div>
-      </div>
     </div>
-
   </main>
 
+  <!-- =====================================
+       BOTTOM SECTION: INSTITUTIONAL X-RAY
+       ===================================== -->
+  <section style="max-width: 1200px; margin: 0 auto 5rem auto; padding: 0 2rem;">
+    
+    <!-- PERFECT GRID: Left side gets 1x space, Right side gets 2.5x space -->
+    <div style="display: grid; grid-template-columns: 1fr 2.5fr; gap: 2rem; align-items: start;">
+      
+      <!-- Left Column: Firm Macro Donut Chart -->
+      <div style="background-color: #fff; border-radius: 24px; padding: 2.5rem 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.03); height: 440px; display: flex; flex-direction: column;">
+        <h3 class="stat-label" style="color: #1A1A1A; margin-bottom: 1.5rem;" id="chart-title">ASSET CLASS ALLOCATION</h3>
+        <div style="flex-grow: 1; position: relative;">
+          <canvas id="firm-allocation-chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Right Column: Systematic Asset Table with Toggle -->
+      <div style="background-color: #fff; border-radius: 24px; padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.03);">
+        
+        <!-- Header Controls -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+          <h2 class="page-title" style="margin: 0; font-size: 1.5rem; text-decoration: none;">Institutional Holdings</h2>
+          <button id="view-toggle-btn" class="institutional-btn">View Detailed Assets</button>
+        </div>
+
+        <!-- Dynamic Table Header -->
+        <div id="table-header-container">
+          <!-- Injected via JavaScript -->
+        </div>
+        
+        <!-- Scrollable container for the rows -->
+        <div id="firm-assets-container" class="custom-scrollbar" style="overflow-y: auto; max-height: 340px; padding-right: 10px;">
+          <!-- JavaScript will inject the asset rows here -->
+        </div>
+
+      </div>
+      
+    </div>
+  </section>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
+ 

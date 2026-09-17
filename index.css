@@ -390,3 +390,159 @@ a{
   position: relative;
   min-width: 0;
 }
+
+ /* =========================================
+   FIRM HOLDINGS ASSET GRID
+   ========================================= */
+.asset-grid {
+  display: grid !important;
+  /* Proportions: Rank, Name (wider), Macro, Sub, Value, Alloc % */
+  grid-template-columns: 0.6fr 2fr 1.5fr 1.5fr 1.5fr 1fr !important;
+  width: 100% !important;
+  align-items: center !important;
+}
+
+.asset-grid > * {
+  text-align: center !important;
+  min-width: 0 !important;
+}
+
+/* Force the Asset Name column to align left */
+.asset-grid > *:nth-child(2) {
+  text-align: left !important;
+}
+
+/* Custom scrollbar for the asset list */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #E5E5E5;
+  border-radius: 10px;
+}
+
+/* =========================================
+   HIERARCHICAL HOLDINGS STYLES
+   ========================================= */
+
+/* Institutional Toggle Button */
+.institutional-btn {
+  background: #1A1A1A;
+  color: #C8F33D;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.institutional-btn:hover {
+  background: #333;
+}
+
+/* Allocation Progress Bar */
+.alloc-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+.alloc-track {
+  flex-grow: 1;
+  height: 8px;
+  background: #E5E5E5;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.alloc-fill {
+  height: 100%;
+  background: #1A1A1A;
+  border-radius: 4px;
+}
+
+/* =========================================
+   PERFECT TABLE WIDTH & ALIGNMENT OVERRIDES
+   ========================================= */
+.macro-table-grid {
+  display: grid !important;
+  grid-template-columns: 0.8fr 3fr 4fr !important; /* Perfectly balances Rank, Name, Allocation */
+  width: 100% !important;
+  align-items: center !important;
+}
+
+.detailed-table-grid {
+  display: grid !important;
+  grid-template-columns: 0.8fr 3fr 2.5fr 3.5fr !important; /* Balances Rank, Name, Class, Allocation */
+  width: 100% !important;
+  align-items: center !important;
+}
+
+.macro-table-grid > *, .detailed-table-grid > * {
+  min-width: 0 !important;
+}
+
+/* Accordion Dropdown Styling */
+.asset-row-wrapper {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.8rem;
+  width: 100%;
+}
+
+.dropdown-arrow {
+  display: inline-block;
+  transition: transform 0.2s ease;
+  font-size: 0.7rem;
+  color: #666;
+}
+
+.asset-row-wrapper.expanded .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.sub-category-dropdown {
+  display: none;
+  background: #F8F9FB;
+  padding: 1rem 1.5rem;
+  border-radius: 0 0 16px 16px;
+  font-size: 0.85rem;
+  color: #555;
+  margin-top: -6px;
+  border-top: 1px dashed #E5E5E5;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.asset-row-wrapper.expanded .sub-category-dropdown {
+  display: block;
+}
+
+/* =========================================
+   FIXED NAVBAR & SMOOTH SCROLLING
+   ========================================= */
+.navbar {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  box-sizing: border-box;
+  background: rgba(246, 245, 240, 0.85) !important; 
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+  /* FIX: Restores the beautiful side padding */
+  padding: 1.5rem 5% !important; 
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+
+body {
+  /* FIX: Adds plenty of breathing room below the fixed navbar */
+  padding-top: 140px !important; 
+}
