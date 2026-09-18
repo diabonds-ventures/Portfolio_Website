@@ -569,3 +569,57 @@ body {
 .client-macro-table-grid > *, .client-detailed-table-grid > * {
   min-width: 0 !important;
 }
+
+/* =========================================
+   MOBILE RESPONSIVENESS (PHONES & TABLETS)
+   ========================================= */
+@media (max-width: 992px) {
+  /* 1. Stack the Main Grids Vertically */
+  main > div, 
+  section > div {
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+    gap: 1.5rem !important;
+  }
+
+  /* 2. Adjust Padding and Spacing */
+  body { padding-top: 100px !important; }
+  main, section { padding: 0 1rem !important; margin-bottom: 2.5rem !important; }
+  
+  /* 3. Fix Chart Heights for Mobile */
+  main > div > div:first-child,
+  section > div > div:first-child {
+    height: 320px !important; 
+    padding: 1.5rem !important;
+  }
+
+  /* 4. Scale Down Typography */
+  .hero-title {
+    font-size: 2.5rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+  .summary-card { padding: 2rem 1.5rem !important; }
+  .stat-val { font-size: 1.8rem !important; }
+  .stat-label { font-size: 0.75rem !important; }
+  
+  /* 5. Mobile Navbar */
+  .navbar { padding: 1rem 5% !important; }
+  .logo-text { font-size: 1rem !important; }
+  .nav-links { gap: 1rem; font-size: 0.85rem; }
+
+  /* 6. Enable Touch Swiping for Tables */
+  .table-scroll-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    padding-bottom: 1rem;
+    margin-top: 1rem;
+  }
+
+  /* Force tables to keep their width and trigger the scroll wrapper */
+  .macro-table-grid, 
+  .detailed-table-grid,
+  .client-macro-table-grid,
+  .client-detailed-table-grid {
+    min-width: 650px !important; 
+  }
+}
