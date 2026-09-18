@@ -34,30 +34,25 @@
         <a href="#explore" class="scroll-link">SCROLL TO EXPLORE &darr;</a>
       </div>
       
-   <!-- Right Column: Systematic Asset Table with Toggle -->
-      <div style="background-color: #fff; border-radius: 24px; padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.03);">
-        
-        <!-- Header Controls -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-          <h2 class="page-title" style="margin: 0; font-size: 1.5rem; text-decoration: none;">Institutional Holdings</h2>
-          <button id="view-toggle-btn" class="institutional-btn">View Detailed Assets</button>
+      <!-- Right: Data Card (We will inject JS data here later) -->
+      <div class="summary-card">
+        <div class="card-top">
+          <span class="card-label">CURRENT TOTAL VALUE</span>
+          <span class="badge">+4.8%</span>
         </div>
-
-        <!-- NEW: Mobile Scroll Wrapper -->
-        <div class="table-scroll-wrapper">
-          
-          <!-- Dynamic Table Header -->
-          <div id="table-header-container">
-            <!-- Injected via JavaScript -->
+        
+        <h2 class="card-value" id="total-value">₹1,284,930</h2>
+        
+        <div class="card-stats">
+          <div class="stat-block">
+            <span class="stat-label">DAILY CHANGE</span>
+            <span class="stat-val" id="daily-change">+6,240</span>
           </div>
-          
-          <!-- Scrollable container for the rows -->
-          <div id="firm-assets-container" class="custom-scrollbar" style="overflow-y: auto; max-height: 340px; padding-right: 10px;">
-            <!-- JavaScript will inject the asset rows here -->
+          <div class="stat-block">
+            <span class="stat-label">YTD RETURN</span>
+            <span class="stat-val" id="ytd-return">+12.4%</span>
           </div>
-          
-        </div> <!-- End Mobile Scroll Wrapper -->
-
+        </div>
       </div>
       
     </div>
