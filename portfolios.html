@@ -27,27 +27,36 @@
     </div>
   </nav>
 
-  <!-- 3. Main Content Area -->
-  <main class="portfolio-section">
-    <h1 class="page-title">Portfolios</h1>
+ <!-- 3. Main Content Area -->
+  <main class="portfolio-section" style="max-width: 1200px; margin: 4rem auto 5rem auto; padding: 0 2rem;">
     
-    <!-- The Column Headers -->
-    <div class="table-header dia-grid">
-      <div>Name</div>
-      <div>1D %</div>
-      <div>1W %</div>
-      <div>1M %</div>
-      <div>MAX %</div>  
-      <div>TREND</div>
-    </div>
+    <!-- White Card Background -->
+    <div style="background-color: #fff; border-radius: 24px; padding: 2rem 2.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.03); width: 100%; box-sizing: border-box;">
+      
+      <h1 class="page-title" style="margin-top: 0; margin-bottom: 2rem; font-size: 2.5rem;">Portfolios</h1>
+      
+      <!-- MOBILE SWIPE WRAPPER -->
+      <div class="table-scroll-wrapper">
+        
+        <!-- The Column Headers -->
+        <div class="table-header dia-grid" style="padding: 0 1.5rem; margin-bottom: 1rem; border-bottom: 2px solid #F8F9FB; padding-bottom: 1rem;">
+          <div style="text-align: left; font-weight: 700;">Name</div>
+          <div style="text-align: left; font-weight: 700;">1D %</div>
+          <div style="text-align: left; font-weight: 700;">1W %</div>
+          <div style="text-align: left; font-weight: 700;">1M %</div>
+          <div style="text-align: left; font-weight: 700;">MAX %</div>  
+          <div style="text-align: center; font-weight: 700;">TREND</div>
+        </div>
 
-    <!-- The Drop Zone for JavaScript -->
-    <div id="portfolio-rows-container">
-      <!-- JavaScript will automatically generate the <a class="table-row"> blocks and put them here -->
+        <!-- The Drop Zone for JavaScript -->
+        <div id="portfolio-rows-container">
+          <!-- JavaScript will automatically generate the <a class="table-row"> blocks and put them here -->
+        </div>
+        
+      </div> <!-- End Swipe Wrapper -->
+
     </div>
-    
   </main>
-
   <!-- 4. Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
   <script src="app.js"></script>

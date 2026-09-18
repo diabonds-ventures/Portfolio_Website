@@ -631,8 +631,7 @@ body {
   .detailed-table-grid,
   .client-macro-table-grid,
   .client-detailed-table-grid,
-  .portfolio-list-header, /* Assuming this is your portfolio header class */
-  .portfolio-list-row {   /* Assuming this is your portfolio row class */
+  .dia-grid {            /* <--- ADD THIS CLASS HERE */
     min-width: 750px !important; 
   }
 
