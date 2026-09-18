@@ -571,37 +571,72 @@ body {
 }
 
 /* =========================================
-   SAFE MOBILE RESPONSIVENESS (PHONES & TABLETS)
+   ULTIMATE MOBILE RESPONSIVENESS FIX
    ========================================= */
+   
 @media (max-width: 992px) {
-  /* 1. Safely stacks ONLY the specific dashboard grids */
-  .dashboard-layout-grid {
-    grid-template-columns: 1fr !important;
+  /* 1. NAVBAR FIX: Stack logo on top, spread links below */
+  .navbar {
+    flex-direction: column !important;
+    justify-content: center !important;
+    padding: 1rem 1.5rem !important;
+    gap: 1rem !important;
     height: auto !important;
-    gap: 2rem !important;
   }
-  
-  .dashboard-layout-grid > div {
-    height: auto !important;
-    min-height: 300px; /* Gives charts breathing room on mobile */
+  .nav-links {
+    width: 100%;
+    justify-content: space-between !important;
+    gap: 0.5rem !important;
+    font-size: 0.9rem !important;
+  }
+  body {
+    padding-top: 150px !important; /* Makes room for the taller stacked navbar */
   }
 
-  /* 2. Allows tables to be swiped horizontally without breaking the page */
+  /* 2. DASHBOARD CARDS FIX: Force them to be large and tall */
+  .dashboard-layout-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2rem !important;
+    height: auto !important;
+  }
+  .dashboard-layout-grid > div {
+    width: 100% !important;
+    min-height: 400px !important; /* Forces the white and black cards to fill the screen */
+    height: auto !important;
+  }
+
+  /* 3. BLACK STATS CARD FIX: Perfect 2x2 grid spacing */
+  .summary-card {
+    padding: 2.5rem 1.5rem !important;
+  }
+  .card-stats {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 2.5rem 1rem !important;
+    width: 100% !important;
+  }
+
+  /* 4. TABLES & PORTFOLIO PAGE FIX: Enable touch swiping */
   .scrollable-table-card {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
     padding: 1.5rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
-  
-  /* 3. Forces the table width so it doesn't squish */
+
+  /* Forces ALL tables (including Portfolios) to stay wide instead of crushing text */
   .macro-table-grid, 
   .detailed-table-grid,
   .client-macro-table-grid,
-  .client-detailed-table-grid {
-    min-width: 700px !important; 
+  .client-detailed-table-grid,
+  .portfolio-list-header, /* Assuming this is your portfolio header class */
+  .portfolio-list-row {   /* Assuming this is your portfolio row class */
+    min-width: 750px !important; 
   }
 
-  /* 4. Scales down massive fonts for mobile screens */
-  .hero-title { font-size: 2.5rem !important; margin-bottom: 1.5rem !important; }
-  .stat-val { font-size: 1.8rem !important; }
+  /* 5. TYPOGRAPHY SCALING */
+  .hero-title { font-size: 2.8rem !important; margin-bottom: 1.5rem !important; }
+  .stat-val { font-size: 2rem !important; }
 }
