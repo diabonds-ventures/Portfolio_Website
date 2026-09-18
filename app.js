@@ -153,7 +153,7 @@ function setupLoginPage() {
     if(welcomeMessage) welcomeMessage.innerText = `Welcome, ${clientDatabase[urlClientId].name}`;
     if(usernameInput) usernameInput.style.display = 'none'; 
   } else {
-    if(welcomeMessage) welcomeMessage.innerText = "Client Login";
+    if(welcomeMessage) welcomeMessage.innerText = "Login....";
     if(usernameInput) {
       usernameInput.style.display = 'block'; 
       usernameInput.required = true;         

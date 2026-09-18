@@ -22,39 +22,55 @@
     </div>
   </nav>
 
-  <!-- Main Hero Section -->
-  <main class="hero">
-    <h1 class="hero-title">Diabonds Ventures<br>hypothetical portfolio</h1>
+  <!-- =====================================
+       MAIN HERO SECTION (RESPONSIVE)
+       ===================================== -->
+  <main style="max-width: 1200px; margin: 4rem auto; padding: 0 2rem;">
     
-    <div class="hero-bottom">
+    <!-- Using the new dashboard-layout-grid for perfect mobile stacking -->
+    <div class="dashboard-layout-grid" style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 4rem; align-items: center; min-height: 60vh;">
       
-      <!-- Left: Description -->
-      <div class="hero-text">
-        <p>A consolidated view of cash, equities, bonds, and real estate, with a live performance chart and the current total portfolio value.</p>
-        <a href="#explore" class="scroll-link">SCROLL TO EXPLORE &darr;</a>
-      </div>
-      
-      <!-- Right: Data Card (We will inject JS data here later) -->
-      <div class="summary-card">
-        <div class="card-top">
-          <span class="card-label">CURRENT TOTAL VALUE</span>
-          <span class="badge">+4.8%</span>
-        </div>
+      <!-- Left Side: Hero Text -->
+      <div style="display: flex; flex-direction: column; justify-content: center;">
         
-        <h2 class="card-value" id="total-value">₹1,284,930</h2>
+        <h1 class="hero-title" style="font-size: 4.5rem; line-height: 1.1; margin-top: 0; margin-bottom: 1.5rem; color: #1A1A1A;">
+          Diabonds Ventures <br>
+          <span style="color: #666; font-weight: 500;">hypothetical portfolios</span>
+        </h1>
         
-        <div class="card-stats">
-          <div class="stat-block">
-            <span class="stat-label">DAILY CHANGE</span>
-            <span class="stat-val" id="daily-change">+6,240</span>
-          </div>
-          <div class="stat-block">
-            <span class="stat-label">YTD RETURN</span>
-            <span class="stat-val" id="ytd-return">+12.4%</span>
-          </div>
+        <p style="font-size: 1.1rem; line-height: 1.6; color: #555; margin-bottom: 3rem; max-width: 90%;">
+          A consolidated view of cash, equities, bonds, and real estate, with a live performance chart and the current total portfolio value.
+        </p>
+        
+        <div style="font-size: 0.85rem; font-weight: 700; letter-spacing: 1px; color: #A3A3A3;">
+          SCROLL TO EXPLORE &darr;
         </div>
       </div>
-      
+
+      <!-- Right Side: Dark Summary Card -->
+      <div class="summary-card" style="margin: 0; width: 100%; box-sizing: border-box; padding: 3rem; display: flex; flex-direction: column; justify-content: center;">
+        
+        <div class="card-top" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+          <span class="card-label" style="color: #A3A3A3; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.5px;">CURRENT TOTAL VALUE</span>
+          <span class="badge" style="background: #C8F33D; color: #1A1A1A; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.8rem; font-weight: 700;">+4.8%</span>
+        </div>
+        
+        <h2 class="card-value" style="font-size: 3.5rem; color: #fff; margin: 0 0 2.5rem 0; font-weight: 600;">₹1,284,930</h2>
+        
+        <!-- Stats Grid (Using the centering fixes we applied earlier) -->
+        <div class="card-stats" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+          <div>
+            <span class="stat-label" style="color: #A3A3A3; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.5px; display: block; margin-bottom: 0.5rem;">DAILY CHANGE</span>
+            <span class="stat-val text-green" style="font-size: 1.8rem; font-weight: 700; display: block;">+₹6,240</span>
+          </div>
+          <div>
+            <span class="stat-label" style="color: #A3A3A3; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.5px; display: block; margin-bottom: 0.5rem;">YTD RETURN</span>
+            <span class="stat-val text-green" style="font-size: 1.8rem; font-weight: 700; display: block;">+12.4%</span>
+          </div>
+        </div>
+
+      </div>
+
     </div>
   </main>
 
