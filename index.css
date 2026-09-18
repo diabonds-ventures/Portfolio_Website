@@ -597,7 +597,7 @@ body {
     font-size: 1.2rem !important; /* Larger logo */
   }
   .nav-links {
-    font-size: 1.15rem !important; /* Larger, readable links */
+    font-size: 1.5rem !important; /* Larger, readable links */
     gap: 1.5rem !important;
     justify-content: center !important;
     flex-wrap: wrap !important;
