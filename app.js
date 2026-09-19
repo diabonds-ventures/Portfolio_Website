@@ -140,6 +140,9 @@ async function fetchCSV(url) {
 // ==========================================
 // 5. LOGIN PAGE LOGIC
 // ==========================================
+// ==========================================
+// 5. LOGIN PAGE LOGIC (EXACT MATCH)
+// ==========================================
 function setupLoginPage() {
   const urlParams = new URLSearchParams(window.location.search);
   const urlClientId = urlParams.get('client'); 
@@ -164,16 +167,26 @@ function setupLoginPage() {
     loginForm.addEventListener('submit', function(event) {
       event.preventDefault(); 
       
+      // Grabs EXACTLY what is typed (removing only accidental spaces at the ends)
       const attemptId = urlClientId || (usernameInput ? usernameInput.value.trim() : '');
-      const enteredPin = document.getElementById('pin-input').value;
+      const enteredPin = document.getElementById('pin-input').value.trim();
 
+      // EXACT MATCH: Looks up the exact ID (case-sensitive, symbols must match)
       if (clientDatabase[attemptId] && clientDatabase[attemptId].pin === enteredPin) {
+        
         sessionStorage.setItem('loggedInClientId', attemptId);
         sessionStorage.setItem('loggedInClientName', clientDatabase[attemptId].name);
         window.location.href = 'clientDaashboard.html'; 
+        
       } else {
-        if(errorMessage) errorMessage.innerText = 'Incorrect Client ID or PIN.';
+        
+        // Fails if it is not an exact match
+        if(errorMessage) {
+          errorMessage.style.display = 'block'; 
+          errorMessage.innerText = 'Incorrect Client ID or PIN.';
+        }
         document.getElementById('pin-input').value = ''; 
+        
       }
     });
   }
