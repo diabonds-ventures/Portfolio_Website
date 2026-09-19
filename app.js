@@ -164,7 +164,7 @@ function setupLoginPage() {
     loginForm.addEventListener('submit', function(event) {
       event.preventDefault(); 
       
-      const attemptId = urlClientId || (usernameInput ? usernameInput.value.trim().toLowerCase() : '');
+      const attemptId = urlClientId || (usernameInput ? usernameInput.value.trim() : '');
       const enteredPin = document.getElementById('pin-input').value;
 
       if (clientDatabase[attemptId] && clientDatabase[attemptId].pin === enteredPin) {
