@@ -2,7 +2,7 @@
 // 1. THE CENTRAL DATABASE
 // ==========================================
 const clientDatabase = {
-  'Diabonds_Ventures':  { pin: '0000', name: 'Diabonds Ventures' },
+  'DiabondsVentures':  { pin: '0000', name: 'Diabonds Ventures' },
   'ashwin': { pin: '5678', name: 'Ashwin' },
 };
 
