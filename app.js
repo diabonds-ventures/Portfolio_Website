@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// 3. HELPER UTILITIES
+// 3. HELPER UTILITIES & ICON GENERATORS
 // ==========================================
 const formatCurrency = (num) => {
   return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
@@ -68,52 +68,59 @@ function hideLoader() {
     setTimeout(() => loader.style.display = 'none', 400); 
   }
 }
-function getAssetIcon(assetName) {
-  const name = assetName.toUpperCase();
+
+// ------------------------------------------
+// a. HELPER: GENERATE 2-LETTER INITIALS
+// ------------------------------------------
+function getAssetInitials(fullName) {
+  if (!fullName) return 'AS';
   
-  // Helper to ensure every single icon is perfectly sized and matches the stroke width of your text
-  const svg = (path) => `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
+  // Clean special characters and trim spaces
+  const cleanName = fullName.trim().replace(/[^a-zA-Z0-9\s]/g, '');
+  const words = cleanName.split(/\s+/).filter(Boolean);
 
-  // 1. CRYPTO & DIGITAL ASSETS (Decentralized Node)
-  if (name.includes('CRYPTO') || name.includes('BITCOIN') || name.includes('BTC') || name.includes('ETH') || name.includes('COIN')) {
-    return svg('<circle cx="12" cy="12" r="10"/><path d="M10 8h4a2 2 0 0 1 0 4h-4"/><path d="M10 12h4a2 2 0 0 1 0 4h-4"/><path d="M12 6v12"/>');
+  if (words.length >= 2) {
+    // Take 1st letter of 1st word + 1st letter of 2nd word (e.g., "Diabonds Ventures" -> "DV")
+    return (words[0][0] + words[1][0]).toUpperCase();
+  } else if (words.length === 1 && words[0].length >= 2) {
+    // Take first 2 letters if single word (e.g., "Gold" -> "GO", "Cash" -> "CA")
+    return words[0].substring(0, 2).toUpperCase();
+  } else if (words.length === 1 && words[0].length === 1) {
+    return (words[0][0] + 'X').toUpperCase();
   }
+  
+  return 'AS';
+}
 
-  // 2. GOLD & PRECIOUS METALS (Hexagon Jewel)
-  if (name.includes('GOLD') || name.includes('SILVER') || name.includes('METAL') || name.includes('SGB') || name.includes('PRECIOUS')) {
-    return svg('<polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>');
-  }
+// ------------------------------------------
+// b. DYNAMIC ICON WITH AUTOMATIC INITIALS FALLBACK
+// ------------------------------------------
+function getAssetIcon(assetFullName) {
+  const name = assetFullName || 'Asset';
+  const initials = getAssetInitials(name);
+  
+  // Path matching exact asset full name from Master_Holdings (Column C)
+  const imagePath = `images/${name}.png`;
 
-  // 3. CASH & LIQUIDITY (Rupee / Banknote)
-  if (name.includes('CASH') || name.includes('LIQUID') || name.includes('BANK')) {
-    return svg('<path d="M6 3h12"/><path d="M6 8h12"/><path d="M6 13l8.5 8"/><path d="M6 13h3a4 4 0 0 0 0-8"/>');
-  }
-
-  // 4. BONDS & DEBT (Security Vault / Shield)
-  if (name.includes('BOND') || name.includes('DEBT') || name.includes('FIXED')) {
-    return svg('<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>');
-  }
-
-  // 5. REAL ESTATE (Architecture / Buildings)
-  if (name.includes('ESTATE') || name.includes('REIT') || name.includes('PROPERTY')) {
-    return svg('<path d="M3 21h18"/><path d="M9 8h1"/><path d="M9 12h1"/><path d="M9 16h1"/><path d="M14 8h1"/><path d="M14 12h1"/><path d="M14 16h1"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/>');
-  }
-
-  // 6. SPECIFIC EQUITY SECTORS (Tech / Banking / Auto)
-  if (name.includes('TECH') || name.includes('TCS') || name.includes('INFOSYS') || name.includes('APPLE')) {
-    return svg('<rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>');
-  }
-  if (name.includes('HDFC') || name.includes('SBI') || name.includes('ICICI') || name.includes('FINANCE')) {
-    return svg('<rect x="3" y="10" width="18" height="10" rx="2"/><path d="M12 14v4"/><path d="M8 14v4"/><path d="M16 14v4"/><path d="M2 10l10-7 10 7"/>');
-  }
-
-  // 7. GENERAL EQUITIES & FUNDS (Market Activity Line)
-  if (name.includes('EQUITY') || name.includes('STOCK') || name.includes('NIFTY') || name.includes('SHARE') || name.includes('FUND')) {
-    return svg('<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>');
-  }
-
-  // 8. THE ULTIMATE FALLBACK (A perfectly centered initial)
-  return assetName.charAt(0);
+  return `
+    <div class="asset-icon-wrapper" style="position: relative; width: 32px; height: 32px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;">
+      <!-- Primary: Local Image from images/ folder -->
+      <img 
+        src="${imagePath}" 
+        alt="${name}"
+        style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; display: block;"
+        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+      />
+      
+      <!-- Fallback: 2-Letter Badge (Shows automatically if image missing/fails to load) -->
+      <div 
+        class="asset-initials-badge" 
+        style="display: none; width: 32px; height: 32px; border-radius: 50%; background: #1E293B; color: #C8F33D; border: 1px solid rgba(255,255,255,0.1); font-weight: 700; font-size: 0.75rem; align-items: center; justify-content: center; letter-spacing: 0.5px; text-transform: uppercase; box-shadow: 0 2px 5px rgba(0,0,0,0.15);"
+      >
+        ${initials}
+      </div>
+    </div>
+  `;
 }
 
 // ==========================================
@@ -140,9 +147,6 @@ async function fetchCSV(url) {
 // ==========================================
 // 5. LOGIN PAGE LOGIC
 // ==========================================
-// ==========================================
-// 5. LOGIN PAGE LOGIC (EXACT MATCH)
-// ==========================================
 function setupLoginPage() {
   const urlParams = new URLSearchParams(window.location.search);
   const urlClientId = urlParams.get('client'); 
@@ -167,26 +171,19 @@ function setupLoginPage() {
     loginForm.addEventListener('submit', function(event) {
       event.preventDefault(); 
       
-      // Grabs EXACTLY what is typed (removing only accidental spaces at the ends)
       const attemptId = urlClientId || (usernameInput ? usernameInput.value.trim() : '');
       const enteredPin = document.getElementById('pin-input').value.trim();
 
-      // EXACT MATCH: Looks up the exact ID (case-sensitive, symbols must match)
       if (clientDatabase[attemptId] && clientDatabase[attemptId].pin === enteredPin) {
-        
         sessionStorage.setItem('loggedInClientId', attemptId);
         sessionStorage.setItem('loggedInClientName', clientDatabase[attemptId].name);
         window.location.href = 'clientDaashboard.html'; 
-        
       } else {
-        
-        // Fails if it is not an exact match
         if(errorMessage) {
           errorMessage.style.display = 'block'; 
           errorMessage.innerText = 'Incorrect Client ID or PIN.';
         }
         document.getElementById('pin-input').value = ''; 
-        
       }
     });
   }
@@ -390,7 +387,7 @@ async function setupClientDashboard() {
     const grossValue = parseFloat(clientSummary[2]) || 0;
     const netValue = parseFloat(clientSummary[3]) || 0;
     
-    globalClientTotalAUM = grossValue; // Store globally for percentage math
+    globalClientTotalAUM = grossValue; 
 
     const grossEl = document.getElementById('client-gross-value');
     const netEl = document.getElementById('client-net-value');
@@ -439,9 +436,7 @@ async function setupClientDashboard() {
 // ==========================================
 // 9. CHARTING & HIERARCHICAL RENDERING FUNCTIONS
 // ==========================================
-// ==========================================
-// STEP 2: FIRM DASHBOARD RENDERING (WITH ICONS)
-// ==========================================
+
 function renderFirmHoldingsHierarchy() {
   const container = document.getElementById('firm-assets-container');
   const headerContainer = document.getElementById('table-header-container');
@@ -492,7 +487,7 @@ function renderFirmHoldingsHierarchy() {
     
     sortedClasses.forEach(([className, val], i) => {
       const rank = i + 1;
-      const allocPercent = ((val / globalTotalAUM) * 100).toFixed(2);
+      const allocPercent = globalTotalAUM > 0 ? ((val / globalTotalAUM) * 100).toFixed(2) : '0.00';
       const highlight = rank <= 3 ? 'background-color: rgba(200, 243, 61, 0.15);' : 'background-color: #F8F9FB;';
 
       chartLabels.push(className);
@@ -504,9 +499,7 @@ function renderFirmHoldingsHierarchy() {
           
           <!-- ICON AND NAME -->
           <div style="font-weight: 700; color: #1A1A1A; display: flex; align-items: center; gap: 12px; text-align: left;">
-            <div style="width: 28px; height: 28px; background: #1A1A1A; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #C8F33D; font-size: 0.85rem; flex-shrink: 0; overflow: hidden;">
-              ${getAssetIcon(className)}
-            </div>
+            ${getAssetIcon(className)}
             <span>${className}</span>
           </div>
           
@@ -535,7 +528,7 @@ function renderFirmHoldingsHierarchy() {
 
     sortedAssets.forEach((asset, i) => {
       const rank = i + 1;
-      const allocPercent = ((asset.value / globalTotalAUM) * 100).toFixed(2);
+      const allocPercent = globalTotalAUM > 0 ? ((asset.value / globalTotalAUM) * 100).toFixed(2) : '0.00';
       const highlight = rank <= 3 ? 'background-color: rgba(200, 243, 61, 0.15);' : 'background-color: #F8F9FB;';
       const uniqueId = `asset-row-${i}`;
 
@@ -544,7 +537,7 @@ function renderFirmHoldingsHierarchy() {
 
       let subCategoryHTML = '';
       for (const [subCat, subVal] of Object.entries(asset.subCategories)) {
-        const subPercent = ((subVal / asset.value) * 100).toFixed(2);
+        const subPercent = asset.value > 0 ? ((subVal / asset.value) * 100).toFixed(2) : '0.00';
         subCategoryHTML += `
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid #E5E5E5;">
             <span style="font-weight: 500;">Sub-Category: <strong style="color: #1A1A1A;">${subCat}</strong></span>
@@ -560,9 +553,7 @@ function renderFirmHoldingsHierarchy() {
             
             <!-- ICON AND NAME -->
             <div style="font-weight: 700; color: #1A1A1A; display: flex; align-items: center; gap: 12px; text-align: left;">
-              <div style="width: 28px; height: 28px; background: #1A1A1A; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #C8F33D; font-size: 0.85rem; flex-shrink: 0; overflow: hidden;">
-                ${getAssetIcon(asset.name)}
-              </div>
+              ${getAssetIcon(asset.name)}
               <span>${asset.name}</span>
               <span class="dropdown-arrow">▼</span>
             </div>
@@ -624,7 +615,6 @@ function drawFirmMacroChart(labels, data) {
           position: 'bottom',
           labels: { padding: 15, font: { family: '-apple-system', size: 11, weight: '600' } }
         },
-        // FIRM CHART SHOWS PERCENTAGE ONLY
         tooltip: {
           callbacks: {
             label: function(context) {
@@ -686,7 +676,6 @@ function drawClientAllocationChart(labels, data) {
   const canvas = document.getElementById('client-allocation-chart');
   if (!canvas) return;
 
-  // Destroys the old chart instance so the toggle button animates smoothly
   if (clientAllocationChartInstance) {
     clientAllocationChartInstance.destroy();
   }
@@ -709,7 +698,6 @@ function drawClientAllocationChart(labels, data) {
           position: 'bottom',
           labels: { padding: 20, font: { family: '-apple-system', size: 12 } }
         },
-        // Forces tooltip to show absolute currency value
         tooltip: {
           callbacks: {
             label: function(context) {
@@ -761,7 +749,7 @@ function drawSparkline(canvasId, navData, isDowntrend) {
 }
 
 // ==========================================
-// STEP 3: CLIENT DASHBOARD RENDERING (WITH ICONS & VALUES)
+// 10. CLIENT DASHBOARD RENDERING
 // ==========================================
 function renderClientHoldingsHierarchy() {
   const container = document.getElementById('client-assets-container');
@@ -809,10 +797,10 @@ function renderClientHoldingsHierarchy() {
     `;
 
     const sortedClasses = Object.entries(macroMap).sort((a, b) => b[1] - a[1]);
-    
+
     sortedClasses.forEach(([className, val], i) => {
       const rank = i + 1;
-      const allocPercent = globalClientTotalAUM > 0 ? ((val / globalClientTotalAUM) * 100).toFixed(2) : "0.00";
+      const allocPercent = globalClientTotalAUM > 0 ? ((val / globalClientTotalAUM) * 100).toFixed(2) : '0.00';
       const highlight = rank <= 3 ? 'background-color: rgba(200, 243, 61, 0.15);' : 'background-color: #F8F9FB;';
 
       chartLabels.push(className);
@@ -824,12 +812,10 @@ function renderClientHoldingsHierarchy() {
           
           <!-- ICON AND NAME -->
           <div style="font-weight: 700; color: #1A1A1A; display: flex; align-items: center; gap: 12px; text-align: left;">
-            <div style="width: 28px; height: 28px; background: #1A1A1A; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #C8F33D; font-size: 0.85rem; flex-shrink: 0; overflow: hidden;">
-              ${getAssetIcon(className)}
-            </div>
+            ${getAssetIcon(className)}
             <span>${className}</span>
           </div>
-          
+
           <div style="font-weight: 700; color: #1A1A1A; text-align: left;">${formatCurrency(val)}</div>
           
           <div class="alloc-bar-container">
@@ -858,7 +844,7 @@ function renderClientHoldingsHierarchy() {
 
     sortedAssets.forEach((asset, i) => {
       const rank = i + 1;
-      const allocPercent = globalClientTotalAUM > 0 ? ((asset.value / globalClientTotalAUM) * 100).toFixed(2) : "0.00";
+      const allocPercent = globalClientTotalAUM > 0 ? ((asset.value / globalClientTotalAUM) * 100).toFixed(2) : '0.00';
       const highlight = rank <= 3 ? 'background-color: rgba(200, 243, 61, 0.15);' : 'background-color: #F8F9FB;';
       const uniqueId = `client-asset-row-${i}`;
 
@@ -867,10 +853,10 @@ function renderClientHoldingsHierarchy() {
 
       let subCategoryHTML = '';
       for (const [subCat, subVal] of Object.entries(asset.subCategories)) {
-        const subPercent = asset.value > 0 ? ((subVal / asset.value) * 100).toFixed(2) : "0.00";
+        const subPercent = asset.value > 0 ? ((subVal / asset.value) * 100).toFixed(2) : '0.00';
         subCategoryHTML += `
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid #E5E5E5;">
-            <span style="font-weight: 500;">Sub-Category: <strong style="color: #1A1A1A;">${subCat}</strong></span>
+            <span style="font-weight: 500;">Sub-Category: <strong style="color: #1A1A1A;">${subCat}</strong> (${formatCurrency(subVal)})</span>
             <span style="color: #16A34A; font-weight: 700;">${subPercent}%</span>
           </div>
         `;
@@ -883,14 +869,13 @@ function renderClientHoldingsHierarchy() {
             
             <!-- ICON AND NAME -->
             <div style="font-weight: 700; color: #1A1A1A; display: flex; align-items: center; gap: 12px; text-align: left;">
-              <div style="width: 28px; height: 28px; background: #1A1A1A; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #C8F33D; font-size: 0.85rem; flex-shrink: 0; overflow: hidden;">
-                ${getAssetIcon(asset.name)}
-              </div>
+              ${getAssetIcon(asset.name)}
               <span>${asset.name}</span>
               <span class="dropdown-arrow">▼</span>
             </div>
 
             <div style="color: #666; font-size: 0.9rem; font-weight: 600; text-align: left;">${asset.assetClass}</div>
+
             <div style="font-weight: 700; color: #1A1A1A; text-align: left;">${formatCurrency(asset.value)}</div>
             
             <div class="alloc-bar-container">
