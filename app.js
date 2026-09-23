@@ -808,11 +808,22 @@ function renderClientHoldingsHierarchy() {
   const macroMap = {};
   const assetMap = {};
 
-  globalClientHoldingsData.forEach((row) => {
-    const assetName = row[2];  
-    const macroClass = row[3]; 
-    const subCategory = row[4];
-    const value = parseFloat(row[9]) || 0; 
+  globalClientHoldingsData.forEach((row, index) => {
+    // Optional check to skip header row if present in client holdings array
+    if (index === 0 && (row[0] === 'Owner' || row[2] === 'Asset Name')) return;
+
+    const assetName = row[2] ? row[2].toString().trim() : '';  
+    const macroClass = row[3] ? row[3].toString().trim() : 'Uncategorized'; 
+    const subCategory = row[4] ? row[4].toString().trim() : 'General';
+    
+    // Safely parse numeric fields to prevent comma/currency character truncation
+    const shares = parseCleanNumber(row[6]);
+    const avgPrice = parseCleanNumber(row[7]);
+    const livePrice = parseCleanNumber(row[8]) || avgPrice;
+    
+    // Explicit Column J value (row[9]); falls back to Shares * Live Price if 0/invalid
+    const explicitValue = parseCleanNumber(row[9]);
+    const value = explicitValue > 0 ? explicitValue : (shares * livePrice);
 
     if (assetName && value > 0) {
       if (!macroMap[macroClass]) macroMap[macroClass] = 0;
@@ -829,6 +840,12 @@ function renderClientHoldingsHierarchy() {
       assetMap[assetName].subCategories[subCategory] += value;
     }
   });
+
+  // Dynamically compute total client AUM to avoid dividing by 0 or stale global variables
+  const computedClientTotalAUM = Object.values(macroMap).reduce((acc, curr) => acc + curr, 0);
+  if (typeof globalClientTotalAUM !== 'undefined') {
+    globalClientTotalAUM = computedClientTotalAUM;
+  }
 
   let html = '';
   let chartLabels = [];
@@ -849,8 +866,9 @@ function renderClientHoldingsHierarchy() {
 
     sortedClasses.forEach(([className, val], i) => {
       const rank = i + 1;
-      const allocPercent = globalClientTotalAUM > 0 ? ((val / globalClientTotalAUM) * 100).toFixed(2) : '0.00';
+      const allocPercent = computedClientTotalAUM > 0 ? ((val / computedClientTotalAUM) * 100).toFixed(2) : '0.00';
       const highlight = rank <= 3 ? 'background-color: rgba(200, 243, 61, 0.15);' : 'background-color: #F8F9FB;';
+      const formattedVal = typeof formatCurrency === 'function' ? formatCurrency(val) : val.toLocaleString();
 
       chartLabels.push(className);
       chartValues.push(val);
@@ -861,11 +879,11 @@ function renderClientHoldingsHierarchy() {
           
           <!-- ICON AND NAME -->
           <div style="font-weight: 700; color: #1A1A1A; display: flex; align-items: center; gap: 12px; text-align: left;">
-            ${getAssetIcon(className)}
+            ${typeof getAssetIcon === 'function' ? getAssetIcon(className) : ''}
             <span>${className}</span>
           </div>
 
-          <div style="font-weight: 700; color: #1A1A1A; text-align: left;">${formatCurrency(val)}</div>
+          <div style="font-weight: 700; color: #1A1A1A; text-align: left;">${formattedVal}</div>
           
           <div class="alloc-bar-container">
             <div class="alloc-track">
@@ -893,9 +911,10 @@ function renderClientHoldingsHierarchy() {
 
     sortedAssets.forEach((asset, i) => {
       const rank = i + 1;
-      const allocPercent = globalClientTotalAUM > 0 ? ((asset.value / globalClientTotalAUM) * 100).toFixed(2) : '0.00';
+      const allocPercent = computedClientTotalAUM > 0 ? ((asset.value / computedClientTotalAUM) * 100).toFixed(2) : '0.00';
       const highlight = rank <= 3 ? 'background-color: rgba(200, 243, 61, 0.15);' : 'background-color: #F8F9FB;';
       const uniqueId = `client-asset-row-${i}`;
+      const formattedAssetVal = typeof formatCurrency === 'function' ? formatCurrency(asset.value) : asset.value.toLocaleString();
 
       chartLabels.push(asset.name);
       chartValues.push(asset.value);
@@ -903,9 +922,11 @@ function renderClientHoldingsHierarchy() {
       let subCategoryHTML = '';
       for (const [subCat, subVal] of Object.entries(asset.subCategories)) {
         const subPercent = asset.value > 0 ? ((subVal / asset.value) * 100).toFixed(2) : '0.00';
+        const formattedSubVal = typeof formatCurrency === 'function' ? formatCurrency(subVal) : subVal.toLocaleString();
+
         subCategoryHTML += `
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid #E5E5E5;">
-            <span style="font-weight: 500;">Sub-Category: <strong style="color: #1A1A1A;">${subCat}</strong> (${formatCurrency(subVal)})</span>
+            <span style="font-weight: 500;">Sub-Category: <strong style="color: #1A1A1A;">${subCat}</strong> (${formattedSubVal})</span>
             <span style="color: #16A34A; font-weight: 700;">${subPercent}%</span>
           </div>
         `;
@@ -918,14 +939,14 @@ function renderClientHoldingsHierarchy() {
             
             <!-- ICON AND NAME -->
             <div style="font-weight: 700; color: #1A1A1A; display: flex; align-items: center; gap: 12px; text-align: left;">
-              ${getAssetIcon(asset.name)}
+              ${typeof getAssetIcon === 'function' ? getAssetIcon(asset.name) : ''}
               <span>${asset.name}</span>
               <span class="dropdown-arrow">▼</span>
             </div>
 
             <div style="color: #666; font-size: 0.9rem; font-weight: 600; text-align: left;">${asset.assetClass}</div>
 
-            <div style="font-weight: 700; color: #1A1A1A; text-align: left;">${formatCurrency(asset.value)}</div>
+            <div style="font-weight: 700; color: #1A1A1A; text-align: left;">${formattedAssetVal}</div>
             
             <div class="alloc-bar-container">
               <div class="alloc-track">
