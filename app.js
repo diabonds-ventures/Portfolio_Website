@@ -469,8 +469,10 @@ function renderFirmHoldingsHierarchy() {
     const macroClass = row[3]; 
     const subCategory = row[4];
     const value = parseFloat(row[9]) || 0; 
+    const shares = parseFloat(row[6]) || 0; // Grabs 'Current Shares'
 
-    if (assetName && value > 0) {
+    // ✅ NEW LOGIC: Renders as long as you own shares
+    if (assetName && shares > 0) {
       if (!macroMap[macroClass]) macroMap[macroClass] = 0;
       macroMap[macroClass] += value;
 
