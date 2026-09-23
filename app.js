@@ -454,6 +454,23 @@ async function setupClientDashboard() {
 // 9. CHARTING & HIERARCHICAL RENDERING FUNCTIONS
 // ==========================================
 
+// ==========================================
+// HELPER: SAFE NUMBER PARSER
+// Strips commas, currency symbols, and spaces before parsing
+// ==========================================
+function parseCleanNumber(value) {
+  if (value === null || value === undefined) return 0;
+  const str = value.toString().trim();
+  if (!str) return 0;
+  const cleaned = str.replace(/[^0-9.-]+/g, '');
+  const parsed = parseFloat(cleaned);
+  return isNaN(parsed) ? 0 : parsed;
+}
+
+// ==========================================
+// 9. CHARTING & HIERARCHICAL RENDERING FUNCTIONS
+// ==========================================
+
 function renderFirmHoldingsHierarchy() {
   const container = document.getElementById('firm-assets-container');
   const headerContainer = document.getElementById('table-header-container');
@@ -465,20 +482,19 @@ function renderFirmHoldingsHierarchy() {
   globalHoldingsData.forEach((row, index) => {
     if (index === 0) return; 
     
-    const assetName = row[2];  
-    const macroClass = row[3]; 
-    const subCategory = row[4];
+    const assetName = row[2] ? row[2].toString().trim() : '';  
+    const macroClass = row[3] ? row[3].toString().trim() : 'Uncategorized'; 
+    const subCategory = row[4] ? row[4].toString().trim() : 'General';
     
-    const shares = parseFloat(row[6]) || 0;
-    const avgPrice = parseFloat(row[7]) || 0;
-    const livePrice = parseFloat(row[8]) || avgPrice;
+    // Safely parse numeric fields without comma truncation
+    const shares = parseCleanNumber(row[6]);
+    const avgPrice = parseCleanNumber(row[7]);
+    const livePrice = parseCleanNumber(row[8]) || avgPrice;
     
-    // ✅ NEW BULLETPROOF LOGIC: Uses Column J if available, 
-    // otherwise calculates Shares × Live Price automatically!
-    const explicitValue = parseFloat(row[9]);
-    const value = (!isNaN(explicitValue) && explicitValue > 0) ? explicitValue : (shares * livePrice);// Grabs 'Current Shares'
+    // Use explicit Column J value if present; otherwise auto-calculate
+    const explicitValue = parseCleanNumber(row[9]);
+    const value = explicitValue > 0 ? explicitValue : (shares * livePrice);
 
-    // ✅ NEW LOGIC: Renders as long as you own shares
     if (assetName && shares > 0) {
       if (!macroMap[macroClass]) macroMap[macroClass] = 0;
       macroMap[macroClass] += value;
@@ -494,6 +510,12 @@ function renderFirmHoldingsHierarchy() {
       assetMap[assetName].subCategories[subCategory] += value;
     }
   });
+
+  // Dynamically compute total AUM to prevent 0.00% allocation bugs
+  const computedTotalAUM = Object.values(macroMap).reduce((acc, curr) => acc + curr, 0);
+  if (typeof globalTotalAUM !== 'undefined') {
+    globalTotalAUM = computedTotalAUM;
+  }
 
   let html = '';
   let chartLabels = [];
@@ -513,7 +535,7 @@ function renderFirmHoldingsHierarchy() {
     
     sortedClasses.forEach(([className, val], i) => {
       const rank = i + 1;
-      const allocPercent = globalTotalAUM > 0 ? ((val / globalTotalAUM) * 100).toFixed(2) : '0.00';
+      const allocPercent = computedTotalAUM > 0 ? ((val / computedTotalAUM) * 100).toFixed(2) : '0.00';
       const highlight = rank <= 3 ? 'background-color: rgba(200, 243, 61, 0.15);' : 'background-color: #F8F9FB;';
 
       chartLabels.push(className);
@@ -523,9 +545,8 @@ function renderFirmHoldingsHierarchy() {
         <div class="table-row macro-table-grid" style="${highlight} padding: 1rem 1.5rem; margin-bottom: 0.8rem; border-radius: 16px;">
           <div style="font-weight: 800; color: #1A1A1A; text-align: center;">${rank}</div>
           
-          <!-- ICON AND NAME -->
           <div style="font-weight: 700; color: #1A1A1A; display: flex; align-items: center; gap: 12px; text-align: left;">
-            ${getAssetIcon(className)}
+            ${typeof getAssetIcon === 'function' ? getAssetIcon(className) : ''}
             <span>${className}</span>
           </div>
           
@@ -554,7 +575,7 @@ function renderFirmHoldingsHierarchy() {
 
     sortedAssets.forEach((asset, i) => {
       const rank = i + 1;
-      const allocPercent = globalTotalAUM > 0 ? ((asset.value / globalTotalAUM) * 100).toFixed(2) : '0.00';
+      const allocPercent = computedTotalAUM > 0 ? ((asset.value / computedTotalAUM) * 100).toFixed(2) : '0.00';
       const highlight = rank <= 3 ? 'background-color: rgba(200, 243, 61, 0.15);' : 'background-color: #F8F9FB;';
       const uniqueId = `asset-row-${i}`;
 
@@ -577,9 +598,8 @@ function renderFirmHoldingsHierarchy() {
           <div class="table-row detailed-table-grid" style="${highlight} padding: 1rem 1.5rem; border-radius: 16px; cursor: pointer;" onclick="toggleAssetDropdown('${uniqueId}')">
             <div style="font-weight: 800; color: #1A1A1A; text-align: center;">${rank}</div>
             
-            <!-- ICON AND NAME -->
             <div style="font-weight: 700; color: #1A1A1A; display: flex; align-items: center; gap: 12px; text-align: left;">
-              ${getAssetIcon(asset.name)}
+              ${typeof getAssetIcon === 'function' ? getAssetIcon(asset.name) : ''}
               <span>${asset.name}</span>
               <span class="dropdown-arrow">▼</span>
             </div>
@@ -617,9 +637,8 @@ function drawFirmMacroChart(labels, data) {
   const canvas = document.getElementById('firm-allocation-chart');
   if (!canvas) return;
 
-  if (firmAllocationChartInstance) {
-    firmAllocationChartInstance.destroy();
-  }
+  const existingChart = Chart.getChart(canvas);
+  if (existingChart) existingChart.destroy();
 
   const firmColors = ['#C8F33D', '#1A1A1A', '#404040', '#737373', '#A3A3A3', '#E5E5E5'];
 
@@ -662,8 +681,11 @@ function drawLineChart(canvasId, historyData, labelStr) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
 
+  const existingChart = Chart.getChart(canvas);
+  if (existingChart) existingChart.destroy();
+
   const labels = historyData.map(row => row[0]); 
-  const navData = historyData.map(row => parseFloat(row[4])); 
+  const navData = historyData.map(row => parseCleanNumber(row[4])); 
 
   const isDowntrend = navData.length > 1 && navData[navData.length - 1] < navData[0];
   const lineColor = isDowntrend ? '#DC2626' : '#C8F33D'; 
@@ -702,9 +724,8 @@ function drawClientAllocationChart(labels, data) {
   const canvas = document.getElementById('client-allocation-chart');
   if (!canvas) return;
 
-  if (clientAllocationChartInstance) {
-    clientAllocationChartInstance.destroy();
-  }
+  const existingChart = Chart.getChart(canvas);
+  if (existingChart) existingChart.destroy();
 
   clientAllocationChartInstance = new Chart(canvas, {
     type: 'doughnut',
@@ -727,7 +748,7 @@ function drawClientAllocationChart(labels, data) {
         tooltip: {
           callbacks: {
             label: function(context) {
-              return ` ${formatCurrency(context.raw)}`;
+              return typeof formatCurrency === 'function' ? ` ${formatCurrency(context.raw)}` : ` ${context.raw}`;
             }
           }
         }
@@ -740,6 +761,9 @@ function drawClientAllocationChart(labels, data) {
 function drawSparkline(canvasId, navData, isDowntrend) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+
+  const existingChart = Chart.getChart(canvas);
+  if (existingChart) existingChart.destroy();
 
   const lineColor = isDowntrend ? '#DC2626' : '#16A34A'; 
   const dotSize = navData.length === 1 ? 3 : 0;
@@ -773,7 +797,6 @@ function drawSparkline(canvasId, navData, isDowntrend) {
     }
   });
 }
-
 // ==========================================
 // 10. CLIENT DASHBOARD RENDERING
 // ==========================================
