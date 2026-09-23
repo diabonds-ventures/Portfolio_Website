@@ -468,8 +468,15 @@ function renderFirmHoldingsHierarchy() {
     const assetName = row[2];  
     const macroClass = row[3]; 
     const subCategory = row[4];
-    const value = parseFloat(row[9]) || 0; 
-    const shares = parseFloat(row[6]) || 0; // Grabs 'Current Shares'
+    
+    const shares = parseFloat(row[6]) || 0;
+    const avgPrice = parseFloat(row[7]) || 0;
+    const livePrice = parseFloat(row[8]) || avgPrice;
+    
+    // ✅ NEW BULLETPROOF LOGIC: Uses Column J if available, 
+    // otherwise calculates Shares × Live Price automatically!
+    const explicitValue = parseFloat(row[9]);
+    const value = (!isNaN(explicitValue) && explicitValue > 0) ? explicitValue : (shares * livePrice);// Grabs 'Current Shares'
 
     // ✅ NEW LOGIC: Renders as long as you own shares
     if (assetName && shares > 0) {
