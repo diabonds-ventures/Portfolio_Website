@@ -135,13 +135,30 @@ const CSV_URLS = {
 async function fetchCSV(url) {
   try {
     const timestamp = new Date().getTime();
-    const response = await fetch(`${url}&_cb=${timestamp}`, { cache: 'no-store' });
-    const data = await response.text();
-    return data.split('\n').map(row => row.split(','));
+    
+    // 1. Safely check if the URL needs a '?' or '&' for the cache-buster
+    const separator = url.includes('?') ? '&' : '?';
+    const cacheBusterUrl = `${url}${separator}_cb=${timestamp}`;
+    
+    const response = await fetch(cacheBusterUrl, { cache: 'no-store' });
+    let data = await response.text();
+    
+    // 2. Clean out the \r characters that were showing up in your console
+    data = data.replace(/\r/g, ''); 
+    
+    // 3. Split by new line, then split by comma, and trim every individual cell
+    return data
+      .trim()
+      .split('\n')
+      .map(row => {
+        return row.split(',').map(cell => cell.trim());
+      });
+      
   } catch (error) {
     console.error("Error fetching data:", error);
     return null;
   }
+
 }
 
 // ==========================================
