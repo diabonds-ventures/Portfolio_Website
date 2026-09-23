@@ -808,20 +808,18 @@ function renderClientHoldingsHierarchy() {
   const macroMap = {};
   const assetMap = {};
 
+  // 1. Process and accumulate holdings
   globalClientHoldingsData.forEach((row, index) => {
-    // Optional check to skip header row if present in client holdings array
     if (index === 0 && (row[0] === 'Owner' || row[2] === 'Asset Name')) return;
 
     const assetName = row[2] ? row[2].toString().trim() : '';  
     const macroClass = row[3] ? row[3].toString().trim() : 'Uncategorized'; 
     const subCategory = row[4] ? row[4].toString().trim() : 'General';
     
-    // Safely parse numeric fields to prevent comma/currency character truncation
     const shares = parseCleanNumber(row[6]);
     const avgPrice = parseCleanNumber(row[7]);
     const livePrice = parseCleanNumber(row[8]) || avgPrice;
     
-    // Explicit Column J value (row[9]); falls back to Shares * Live Price if 0/invalid
     const explicitValue = parseCleanNumber(row[9]);
     const value = explicitValue > 0 ? explicitValue : (shares * livePrice);
 
@@ -841,10 +839,19 @@ function renderClientHoldingsHierarchy() {
     }
   });
 
-  // Dynamically compute total client AUM to avoid dividing by 0 or stale global variables
+  // 2. DYNAMICALLY COMPUTE TOTAL CLIENT AUM
   const computedClientTotalAUM = Object.values(macroMap).reduce((acc, curr) => acc + curr, 0);
+  
   if (typeof globalClientTotalAUM !== 'undefined') {
     globalClientTotalAUM = computedClientTotalAUM;
+  }
+
+  // 3. UPDATE TOP CARD PORTFOLIO VALUE (Fixes ₹0 Display)
+  const topCardValueEl = document.getElementById('client-portfolio-value') || document.getElementById('current-portfolio-value');
+  if (topCardValueEl) {
+    topCardValueEl.innerText = typeof formatCurrency === 'function' 
+      ? formatCurrency(computedClientTotalAUM) 
+      : `₹${computedClientTotalAUM.toLocaleString()}`;
   }
 
   let html = '';
@@ -866,9 +873,10 @@ function renderClientHoldingsHierarchy() {
 
     sortedClasses.forEach(([className, val], i) => {
       const rank = i + 1;
+      // Calculate allocation using computedClientTotalAUM
       const allocPercent = computedClientTotalAUM > 0 ? ((val / computedClientTotalAUM) * 100).toFixed(2) : '0.00';
       const highlight = rank <= 3 ? 'background-color: rgba(200, 243, 61, 0.15);' : 'background-color: #F8F9FB;';
-      const formattedVal = typeof formatCurrency === 'function' ? formatCurrency(val) : val.toLocaleString();
+      const formattedVal = typeof formatCurrency === 'function' ? formatCurrency(val) : `₹${val.toLocaleString()}`;
 
       chartLabels.push(className);
       chartValues.push(val);
@@ -877,7 +885,6 @@ function renderClientHoldingsHierarchy() {
         <div class="table-row client-macro-table-grid" style="${highlight} padding: 1rem 1.5rem; margin-bottom: 0.8rem; border-radius: 16px;">
           <div style="font-weight: 800; color: #1A1A1A; text-align: center;">${rank}</div>
           
-          <!-- ICON AND NAME -->
           <div style="font-weight: 700; color: #1A1A1A; display: flex; align-items: center; gap: 12px; text-align: left;">
             ${typeof getAssetIcon === 'function' ? getAssetIcon(className) : ''}
             <span>${className}</span>
@@ -885,9 +892,9 @@ function renderClientHoldingsHierarchy() {
 
           <div style="font-weight: 700; color: #1A1A1A; text-align: left;">${formattedVal}</div>
           
-          <div class="alloc-bar-container">
-            <div class="alloc-track">
-              <div class="alloc-fill" style="width: ${allocPercent}%; background: ${rank === 1 ? '#C8F33D' : '#1A1A1A'};"></div>
+          <div class="alloc-bar-container" style="display: flex; align-items: center; gap: 10px;">
+            <div class="alloc-track" style="flex: 1; height: 8px; background: #E5E5E5; border-radius: 4px; overflow: hidden;">
+              <div class="alloc-fill" style="width: ${allocPercent}%; height: 100%; background: ${rank === 1 ? '#C8F33D' : '#1A1A1A'};"></div>
             </div>
             <span style="font-weight: 700; font-size: 0.9rem; min-width: 55px; text-align: right; color: #16A34A;">${allocPercent}%</span>
           </div>
@@ -914,7 +921,7 @@ function renderClientHoldingsHierarchy() {
       const allocPercent = computedClientTotalAUM > 0 ? ((asset.value / computedClientTotalAUM) * 100).toFixed(2) : '0.00';
       const highlight = rank <= 3 ? 'background-color: rgba(200, 243, 61, 0.15);' : 'background-color: #F8F9FB;';
       const uniqueId = `client-asset-row-${i}`;
-      const formattedAssetVal = typeof formatCurrency === 'function' ? formatCurrency(asset.value) : asset.value.toLocaleString();
+      const formattedAssetVal = typeof formatCurrency === 'function' ? formatCurrency(asset.value) : `₹${asset.value.toLocaleString()}`;
 
       chartLabels.push(asset.name);
       chartValues.push(asset.value);
@@ -922,7 +929,7 @@ function renderClientHoldingsHierarchy() {
       let subCategoryHTML = '';
       for (const [subCat, subVal] of Object.entries(asset.subCategories)) {
         const subPercent = asset.value > 0 ? ((subVal / asset.value) * 100).toFixed(2) : '0.00';
-        const formattedSubVal = typeof formatCurrency === 'function' ? formatCurrency(subVal) : subVal.toLocaleString();
+        const formattedSubVal = typeof formatCurrency === 'function' ? formatCurrency(subVal) : `₹${subVal.toLocaleString()}`;
 
         subCategoryHTML += `
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid #E5E5E5;">
@@ -937,7 +944,6 @@ function renderClientHoldingsHierarchy() {
           <div class="table-row client-detailed-table-grid" style="${highlight} padding: 1rem 1.5rem; border-radius: 16px; cursor: pointer;" onclick="toggleAssetDropdown('${uniqueId}')">
             <div style="font-weight: 800; color: #1A1A1A; text-align: center;">${rank}</div>
             
-            <!-- ICON AND NAME -->
             <div style="font-weight: 700; color: #1A1A1A; display: flex; align-items: center; gap: 12px; text-align: left;">
               ${typeof getAssetIcon === 'function' ? getAssetIcon(asset.name) : ''}
               <span>${asset.name}</span>
@@ -948,9 +954,9 @@ function renderClientHoldingsHierarchy() {
 
             <div style="font-weight: 700; color: #1A1A1A; text-align: left;">${formattedAssetVal}</div>
             
-            <div class="alloc-bar-container">
-              <div class="alloc-track">
-                <div class="alloc-fill" style="width: ${allocPercent}%; background: ${rank === 1 ? '#C8F33D' : '#1A1A1A'};"></div>
+            <div class="alloc-bar-container" style="display: flex; align-items: center; gap: 10px;">
+              <div class="alloc-track" style="flex: 1; height: 8px; background: #E5E5E5; border-radius: 4px; overflow: hidden;">
+                <div class="alloc-fill" style="width: ${allocPercent}%; height: 100%; background: ${rank === 1 ? '#C8F33D' : '#1A1A1A'};"></div>
               </div>
               <span style="font-weight: 700; font-size: 0.9rem; min-width: 55px; text-align: right; color: #16A34A;">${allocPercent}%</span>
             </div>
@@ -965,5 +971,8 @@ function renderClientHoldingsHierarchy() {
   }
 
   container.innerHTML = html;
-  drawClientAllocationChart(chartLabels, chartValues);
+  
+  if (typeof drawClientAllocationChart === 'function') {
+    drawClientAllocationChart(chartLabels, chartValues);
+  }
 }
