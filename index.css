@@ -656,3 +656,31 @@ body {
   .hero-title { font-size: 2.8rem !important; margin-bottom: 1.5rem !important; }
   .stat-val { font-size: 2.2rem !important; }
 }
+
+/* =========================================
+   5. PORTFOLIO CARD HEADER BUTTON
+   ========================================= */
+   .portfolio-card-header {
+    display: flex;
+    justify-content: flex-end; /* Aligns the button to the right */
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.btn-analytics {
+    background-color: #2a2a35; /* Blends well with the dark card */
+    color: #e0e0e0;
+    border: 1px solid #4a4a5a;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-analytics:hover {
+    background-color: #3f3f5a;
+    border-color: #6a6a8a;
+    color: white;
+}

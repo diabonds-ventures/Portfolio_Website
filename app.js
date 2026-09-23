@@ -37,6 +37,14 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==========================================
 // 3. HELPER UTILITIES & ICON GENERATORS
 // ==========================================
+function openClientAnalytics(clientId) {
+  if (!clientId) {
+    console.error("Cannot launch analytics: Missing clientId");
+    return;
+  }
+  // Launches standalone analytics page in a new tab with clientId context
+  window.open(`clientAnalytics.html?clientId=${encodeURIComponent(clientId)}`, '_blank');
+}
 const formatCurrency = (num) => {
   return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
 };

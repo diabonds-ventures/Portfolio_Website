@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Client Quantitative Analytics Suite</title>
+  
+  <!-- Font Setup: Inter for UI, JetBrains Mono for High-Density Financial Data -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Dedicated CSS File -->
+  <link rel="stylesheet" href="clientAnalytics.css" />
+</head>
+<body>
+
+  <!-- ================= TOP NAVIGATION & RISK HEADER ================= -->
+  <header class="analytics-header">
+    <div class="header-brand">
+      <div class="brand-badge">QUANT</div>
+      <h1>Client Analytics <span>// Portfolio Intelligence</span></h1>
+    </div>
+
+    <!-- Quick Stats Bar -->
+    <div class="quick-stats-bar">
+      <div class="stat-pill">
+        <span class="stat-label">Total AUM</span>
+        <span class="stat-value mono" id="headerAum">₹0.00</span>
+      </div>
+      <div class="stat-pill">
+        <span class="stat-label">Portfolio Beta</span>
+        <span class="stat-value mono" id="headerBeta">0.00</span>
+      </div>
+      <div class="stat-pill risk-pill">
+        <span class="stat-label">95% 1M VaR</span>
+        <span class="stat-value mono text-danger" id="headerVar">₹0.00</span>
+      </div>
+    </div>
+
+    <!-- 1-Tap Horizon Switcher -->
+    <div class="horizon-switcher" role="group" aria-label="Time Horizon Switcher">
+      <button class="horizon-btn active" data-horizon="1Y">1Y Horizon</button>
+      <button class="horizon-btn" data-horizon="3Y">3Y Horizon</button>
+      <button class="horizon-btn" data-horizon="5Y">5Y Horizon</button>
+    </div>
+  </header>
+
+  <main class="analytics-grid">
+
+    <!-- ================= 1. HERO BENCHMARK OVERLAY CHART ================= -->
+    <section class="card chart-card">
+      <div class="card-header">
+        <div>
+          <h2>Nifty 50 Benchmark Overlay</h2>
+          <p class="card-subtitle">Comparative growth vs. Indian market benchmark index</p>
+        </div>
+        <div class="chart-legend-custom">
+          <span class="legend-item"><span class="legend-dot portfolio-dot"></span> Portfolio</span>
+          <span class="legend-item"><span class="legend-dot nifty-dot"></span> Nifty 50</span>
+        </div>
+      </div>
+      
+      <div class="chart-container">
+        <canvas id="niftyOverlayChart"></canvas>
+      </div>
+    </section>
+
+    <!-- ================= 2. VALUE-AT-RISK & RISK ENVELOPE ================= -->
+    <section class="card risk-card">
+      <div class="card-header">
+        <h2>Downside Tail Risk (VaR)</h2>
+        <span class="badge badge-risk">95% Parametric Confidence</span>
+      </div>
+
+      <div class="risk-metrics-grid">
+        <div class="risk-tile">
+          <span class="tile-label">Max Upside Potential</span>
+          <span class="tile-value mono text-success" id="upsidePotential">+0.00%</span>
+          <span class="tile-sub" id="upsideValue">₹0</span>
+        </div>
+        <div class="risk-tile">
+          <span class="tile-label">Value-at-Risk (Monthly)</span>
+          <span class="tile-value mono text-danger" id="monthlyVarPct">-0.00%</span>
+          <span class="tile-sub" id="monthlyVarVal">₹0</span>
+        </div>
+        <div class="risk-tile">
+          <span class="tile-label">Historical Max Drawdown</span>
+          <span class="tile-value mono text-warning" id="maxDrawdown">-0.00%</span>
+          <span class="tile-sub">Peak-to-Trough</span>
+        </div>
+      </div>
+
+      <div class="risk-explanation">
+        <p><strong>Quantitative Interpretation:</strong> There is a 95% statistical probability that portfolio losses will not exceed <span class="mono text-danger" id="varInterpretation">₹0.00</span> over a 30-day window under standard market volatility conditions.</p>
+      </div>
+    </section>
+
+    <!-- ================= 3. SIP / REGULAR INVESTMENT SIMULATOR ================= -->
+    <section class="card simulator-card">
+      <div class="card-header">
+        <h2>SIP Compounding Simulator</h2>
+        <span class="badge badge-primary">Interactive Projections</span>
+      </div>
+
+      <div class="simulator-body">
+        <div class="controls-column">
+          <!-- Monthly Investment Slider -->
+          <div class="form-group">
+            <div class="slider-header">
+              <label for="sipAmountRange">Monthly SIP Amount</label>
+              <span class="slider-display mono" id="sipAmountDisplay">₹10,000</span>
+            </div>
+            <input type="range" id="sipAmountRange" min="1000" max="100000" step="1000" value="10000" class="quant-slider" />
+          </div>
+
+          <!-- Time Duration Slider -->
+          <div class="form-group">
+            <div class="slider-header">
+              <label for="sipDurationRange">Investment Duration</label>
+              <span class="slider-display mono" id="sipDurationDisplay">5 Years</span>
+            </div>
+            <input type="range" id="sipDurationRange" min="1" max="20" step="1" value="5" class="quant-slider" />
+          </div>
+
+          <!-- Expected Return Input -->
+          <div class="form-group inline-group">
+            <label for="sipReturnInput">Assumed Portfolio Return (CAGR)</label>
+            <div class="input-unit-wrap">
+              <input type="number" id="sipReturnInput" value="12.5" step="0.5" class="quant-input mono" />
+              <span class="unit-tag">%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="output-column">
+          <div class="output-card">
+            <div class="output-row">
+              <span>Total Capital Invested</span>
+              <span class="mono" id="simTotalInvested">₹0</span>
+            </div>
+            <div class="output-row">
+              <span>Estimated Wealth Gain</span>
+              <span class="mono text-success" id="simWealthGain">₹0</span>
+            </div>
+            <div class="output-divider"></div>
+            <div class="output-row main-output">
+              <span>Projected Portfolio Value</span>
+              <span class="mono text-highlight" id="simProjectedTotal">₹0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 4. LIGHTNING FEED TRANSACTION LEDGER ================= -->
+    <section class="card ledger-card">
+      <div class="card-header flex-between">
+        <div>
+          <h2>Lightning Feed Transaction Ledger</h2>
+          <p class="card-subtitle">Real-time sub-millisecond searchable transaction record</p>
+        </div>
+        <div class="ledger-controls">
+          <input type="text" id="ledgerSearchInput" placeholder="⚡ Search by asset, ID, or type..." class="quant-search-input" />
+          <select id="ledgerTypeFilter" class="quant-select">
+            <option value="ALL">All Types</option>
+            <option value="BUY">BUY</option>
+            <option value="SELL">SELL</option>
+            <option value="DIVIDEND">DIVIDEND</option>
+            <option value="DEPOSIT">DEPOSIT</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table id="transactionTable" class="quant-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Transaction ID</th>
+              <th>Type</th>
+              <th>Asset / Description</th>
+              <th class="text-right">Quantity</th>
+              <th class="text-right">Price</th>
+              <th class="text-right">Total Amount</th>
+            </tr>
+          </thead>
+          <tbody id="transactionTableBody">
+            <!-- Dynamically Rendered by clientAnalytics.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- External Script -->
+  <script src="clientAnalytics.js"></script>
+</body>
+</html>
