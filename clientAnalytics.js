@@ -93,19 +93,22 @@
 
       for (let i = 1; i < navRows.length; i++) {
         const row = navRows[i];
-        if (!row[0]) continue;
+        
+        // Skip empty rows
+        if (!row || !row[0] || row[0].trim() === '') continue;
 
-        const dateStr = row[0]; // Col A: Date
-        const portValue = parseCleanNumber(row[2]); // Col C: Total Portfolio Value
-        const instNav = parseCleanNumber(row[7]);   // Col H: Institution NAV
+        const dateStr = row[0].trim();              // Col A (0): Date
+        const totalValue = parseCleanNumber(row[2]);// Col C (2): Total Portfolio Value (AUM)
+        const portNav = parseCleanNumber(row[4]);   // Col E (4): Portfolio Unit NAV
+        const niftyNav = parseCleanNumber(row[8]);  // Col I (8): Nifty 50 NAV
 
         if (!inceptionDate) inceptionDate = dateStr;
-        latestAum = portValue;
+        latestAum = totalValue;
 
         benchmarkData.push({
           date: dateStr,
-          portfolioNav: portValue,
-          niftyNav: instNav
+          portfolioNav: portNav,
+          niftyNav: niftyNav
         });
       }
 
@@ -113,16 +116,17 @@
       const transactionLedger = [];
       for (let i = 1; i < txnRows.length; i++) {
         const row = txnRows[i];
-        if (!row[0]) continue;
+        
+        if (!row || !row[0] || row[0].trim() === '') continue;
 
         transactionLedger.push({
           id: `TXN-${i}`,
-          date: row[0],                      // Col A: Date
-          type: row[2] || "",                 // Col C: Action
-          asset: row[3] || "",                // Col D: Ticker
-          quantity: parseCleanNumber(row[4]), // Col E: Qty
-          price: parseCleanNumber(row[8]),    // Col I: Net Price
-          amount: parseCleanNumber(row[9])    // Col J: Total Value
+          date: row[0].trim(),               // Col A: Date
+          type: row[2] || "",                // Col C: Action
+          asset: row[3] || "",               // Col D: Ticker
+          quantity: parseCleanNumber(row[4]),// Col E: Qty
+          price: parseCleanNumber(row[8]),   // Col I: Net Price
+          amount: parseCleanNumber(row[9])   // Col J: Total Value
         });
       }
 
@@ -143,7 +147,7 @@
 
       // Render UI
       renderHeaderStats(payload.portfolioSummary);
-      renderChartOverlay(payload.benchmarkData, state.activeHorizon, payload.portfolioSummary.inceptionDate);
+      renderChartOverlay(payload.benchmarkData, state.activeHorizon);
       calculateVaR(payload.portfolioSummary);
       initSipSimulator(payload.portfolioSummary.cagr);
       renderLedger(state.ledgerData);
@@ -163,7 +167,7 @@
         state.activeHorizon = e.target.getAttribute('data-horizon');
 
         if (state.rawPayload) {
-          renderChartOverlay(state.rawPayload.benchmarkData, state.activeHorizon, state.rawPayload.portfolioSummary.inceptionDate);
+          renderChartOverlay(state.rawPayload.benchmarkData, state.activeHorizon);
           calculateVaR(state.rawPayload.portfolioSummary);
         }
       });
@@ -181,28 +185,27 @@
     document.getElementById('headerBeta').textContent = parseCleanNumber(summary.beta).toFixed(2);
   }
 
-  function renderChartOverlay(benchmarkData, horizon, inceptionDateStr) {
+  // FIXED: Date filtering keeps all historical points within selected time horizon
+  function renderChartOverlay(benchmarkData, horizon) {
     const canvas = document.getElementById('niftyOverlayChart');
-    if (!canvas || !benchmarkData) return;
+    if (!canvas || !benchmarkData || benchmarkData.length === 0) return;
 
-    const requestedMonths = horizon === '1Y' ? 12 : horizon === '3Y' ? 36 : 60;
+    // Filter points based on selected time horizon cutoff
+    const cutoffDate = new Date();
+    if (horizon === '1Y') cutoffDate.setFullYear(cutoffDate.getFullYear() - 1);
+    else if (horizon === '3Y') cutoffDate.setFullYear(cutoffDate.getFullYear() - 3);
+    else if (horizon === '5Y') cutoffDate.setFullYear(cutoffDate.getFullYear() - 5);
 
-    let monthsSinceInception = requestedMonths;
-    if (inceptionDateStr) {
-      const inceptionDate = new Date(inceptionDateStr);
-      const today = new Date();
-      monthsSinceInception = (today.getFullYear() - inceptionDate.getFullYear()) * 12;
-      monthsSinceInception -= inceptionDate.getMonth();
-      monthsSinceInception += today.getMonth();
-      monthsSinceInception = monthsSinceInception <= 0 ? 1 : monthsSinceInception;
-    }
+    const activeDataset = benchmarkData.filter(d => {
+      const itemDate = new Date(d.date);
+      return isNaN(itemDate.getTime()) || itemDate >= cutoffDate;
+    });
 
-    const actualMonthsToShow = Math.min(requestedMonths, monthsSinceInception);
-    const slicedData = benchmarkData.slice(-actualMonthsToShow);
+    const datasetToRender = activeDataset.length > 0 ? activeDataset : benchmarkData;
 
-    const labels = slicedData.map(d => d.date);
-    const portfolioSeries = slicedData.map(d => d.portfolioNav);
-    const niftySeries = slicedData.map(d => d.niftyNav);
+    const labels = datasetToRender.map(d => d.date);
+    const portfolioSeries = datasetToRender.map(d => d.portfolioNav);
+    const niftySeries = datasetToRender.map(d => d.niftyNav);
 
     if (state.chartInstance) {
       state.chartInstance.destroy();
@@ -215,24 +218,24 @@
         labels: labels,
         datasets: [
           {
-            label: 'Portfolio Value (₹)',
+            label: 'Portfolio NAV',
             data: portfolioSeries,
             borderColor: '#3b82f6',
             backgroundColor: 'rgba(59, 130, 246, 0.08)',
             fill: true,
             tension: 0.3,
             borderWidth: 2,
-            pointRadius: 0
+            pointRadius: 3
           },
           {
-            label: 'Nifty 50 Nav',
+            label: 'Nifty 50 NAV',
             data: niftySeries,
             borderColor: '#6b7280',
             borderDash: [4, 4],
             fill: false,
             tension: 0.3,
             borderWidth: 1.5,
-            pointRadius: 0
+            pointRadius: 3
           }
         ]
       },
