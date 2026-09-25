@@ -22,10 +22,10 @@
   <header class="analytics-header">
     <div class="header-brand">
       <div class="brand-badge">QUANT</div>
-      <h1>Client Analytics <span>// Portfolio Intelligence</span></h1>
+      <h1>Analytics <span>(Portfolio Intelligence)</span></h1>
     </div>
 
-    <!-- Quick Stats Bar -->
+<!-- Quick Stats Bar -->
     <div class="quick-stats-bar">
       <div class="stat-pill">
         <span class="stat-label">Total AUM</span>
@@ -35,12 +35,15 @@
         <span class="stat-label">Portfolio Beta</span>
         <span class="stat-value mono" id="headerBeta">0.00</span>
       </div>
+      <div class="stat-pill">
+        <span class="stat-label">Portfolio CAGR</span>
+        <span class="stat-value mono" id="headerCagr">--</span>
+      </div>
       <div class="stat-pill risk-pill">
-        <span class="stat-label">95% 1M VaR</span>
+        <span class="stat-label">52W Stress (Low)</span>
         <span class="stat-value mono text-danger" id="headerVar">₹0.00</span>
       </div>
     </div>
-
     <!-- 1-Tap Horizon Switcher -->
     <div class="horizon-switcher" role="group" aria-label="Time Horizon Switcher">
       <button class="horizon-btn active" data-horizon="1Y">1Y Horizon</button>
@@ -68,11 +71,10 @@
         <canvas id="niftyOverlayChart"></canvas>
       </div>
     </section>
-
     <!-- ================= 2. VALUE-AT-RISK & RISK ENVELOPE ================= -->
     <section class="card risk-card">
       <div class="card-header">
-        <h2>Downside Tail Risk (VaR)</h2>
+        <h2>Risk Metrics</h2>
         <span class="badge badge-risk">95% Parametric Confidence</span>
       </div>
 
@@ -83,7 +85,7 @@
           <span class="tile-sub" id="upsideValue">₹0</span>
         </div>
         <div class="risk-tile">
-          <span class="tile-label">Value-at-Risk (Monthly)</span>
+          <span class="tile-label">Value-at-Risk</span>
           <span class="tile-value mono text-danger" id="monthlyVarPct">-0.00%</span>
           <span class="tile-sub" id="monthlyVarVal">₹0</span>
         </div>
@@ -95,10 +97,9 @@
       </div>
 
       <div class="risk-explanation">
-        <p><strong>Quantitative Interpretation:</strong> There is a 95% statistical probability that portfolio losses will not exceed <span class="mono text-danger" id="varInterpretation">₹0.00</span> over a 30-day window under standard market volatility conditions.</p>
+        <p id="varInterpretation"><strong>Quantitative Interpretation:</strong> Loading statistical boundaries...</p>
       </div>
     </section>
-
     <!-- ================= 3. SIP / REGULAR INVESTMENT SIMULATOR ================= -->
     <section class="card simulator-card">
       <div class="card-header">
@@ -121,16 +122,16 @@
           <div class="form-group">
             <div class="slider-header">
               <label for="sipDurationRange">Investment Duration</label>
-              <span class="slider-display mono" id="sipDurationDisplay">5 Years</span>
+              <span class="slider-display mono" id="sipDurationDisplay">1 Year</span>
             </div>
-            <input type="range" id="sipDurationRange" min="1" max="20" step="1" value="5" class="quant-slider" />
+            <input type="range" id="sipDurationRange" min="1" max="20" step="1" value="1" class="quant-slider" />
           </div>
 
-          <!-- Expected Return Input -->
+          <!-- Locked Portfolio Return Display -->
           <div class="form-group inline-group">
-            <label for="sipReturnInput">Assumed Portfolio Return (CAGR)</label>
+            <label>Assumed Portfolio Return (CAGR/Abs)</label>
             <div class="input-unit-wrap">
-              <input type="number" id="sipReturnInput" value="12.5" step="0.5" class="quant-input mono" />
+              <span class="quant-input mono" id="sipReturnDisplay" style="background: transparent; border: none; padding-left: 0;">--</span>
               <span class="unit-tag">%</span>
             </div>
           </div>
@@ -144,7 +145,7 @@
             </div>
             <div class="output-row">
               <span>Estimated Wealth Gain</span>
-              <span class="mono text-success" id="simWealthGain">₹0</span>
+              <span class="mono" id="simWealthGain">₹0</span>
             </div>
             <div class="output-divider"></div>
             <div class="output-row main-output">

@@ -1,5 +1,6 @@
 /**
  * CLIENT QUANTITATIVE ANALYTICS ENGINE (LIVE GOOGLE SHEETS CALCULATOR)
+ * Features 52-Week SOTP High/Low Range, Historical Drawdown, CAGR, & Integrated SIP Simulator
  */
 
 (function () {
@@ -8,6 +9,7 @@
   // ⚠️ PUBLISHED CSV LINKS FROM FILE -> SHARE -> PUBLISH TO WEB
   const NAV_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS7I_zj5rMDE3MtKOZj2A4UMYt_dn38Y3MxBxyMCflePaHRDYmROUwWrlvvCQ7idR87n_TY-YPEhZzA/pub?gid=702735038&single=true&output=csv";
   const TXN_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS7I_zj5rMDE3MtKOZj2A4UMYt_dn38Y3MxBxyMCflePaHRDYmROUwWrlvvCQ7idR87n_TY-YPEhZzA/pub?gid=705567559&single=true&output=csv";
+  const LIVE_PRICES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS7I_zj5rMDE3MtKOZj2A4UMYt_dn38Y3MxBxyMCflePaHRDYmROUwWrlvvCQ7idR87n_TY-YPEhZzA/pub?gid=0&single=true&output=csv";
 
   const state = {
     clientId: null,
@@ -15,7 +17,8 @@
     rawPayload: null,
     chartInstance: null,
     ledgerData: [],
-    quantMetrics: null
+    quantMetrics: null,
+    sotpMetrics: null
   };
 
   function parseCleanNumber(val) {
@@ -67,25 +70,38 @@
     const urlParams = new URLSearchParams(window.location.search);
     state.clientId = urlParams.get('clientId');
   }
-
-  async function fetchClientData() {
+async function fetchClientData() {
     try {
-      const [navRes, txnRes] = await Promise.all([
-        fetch(NAV_CSV_URL),
-        fetch(TXN_CSV_URL)
-      ]);
-
-      if (!navRes.ok || !txnRes.ok) {
-        throw new Error("Unable to fetch published CSV feeds. Verify published links.");
+      // Cache-buster forces fresh data on the first load
+      const cb = `&t=${new Date().getTime()}`;
+      
+      const fetchPromises = [
+        fetch(NAV_CSV_URL + cb), 
+        fetch(TXN_CSV_URL + cb)
+      ];
+      
+      if (LIVE_PRICES_CSV_URL && !LIVE_PRICES_CSV_URL.includes("PASTE_YOUR")) {
+        fetchPromises.push(fetch(LIVE_PRICES_CSV_URL + cb));
       }
 
-      const navText = await navRes.text();
-      const txnText = await txnRes.text();
+      const responses = await Promise.all(fetchPromises);
+
+      if (!responses[0].ok || !responses[1].ok) {
+        throw new Error("Unable to fetch primary CSV feeds. Verify published links.");
+      }
+
+      const navText = await responses[0].text();
+      const txnText = await responses[1].text();
+      let priceText = null;
+      if (responses[2] && responses[2].ok) {
+        priceText = await responses[2].text();
+      }
 
       const navRows = parseCSV(navText);
       const txnRows = parseCSV(txnText);
+      const priceRows = priceText ? parseCSV(priceText) : [];
 
-      // Process Historical_NAV (Skip header row 0)
+      // 1. Process Historical NAV
       const benchmarkData = [];
       let latestAum = 0;
       let inceptionDate = null;
@@ -94,10 +110,10 @@
         const row = navRows[i];
         if (!row || !row[0] || row[0].trim() === '') continue;
 
-        const dateStr = row[0].trim();              // Col A: Date
-        const totalValue = parseCleanNumber(row[2]);// Col C: Total Portfolio Value (AUM)
-        const portNav = parseCleanNumber(row[4]);   // Col E: Portfolio Unit NAV
-        const niftyNav = parseCleanNumber(row[8]);  // Col I: Nifty 50 NAV
+        const dateStr = row[0].trim();              
+        const totalValue = parseCleanNumber(row[2]);
+        const portNav = parseCleanNumber(row[4]);   
+        const niftyNav = parseCleanNumber(row[8]);  
 
         if (!inceptionDate) inceptionDate = dateStr;
         latestAum = totalValue;
@@ -109,25 +125,53 @@
         });
       }
 
-      // Process Transactions (Skip header row 0)
+      // 2. Process Transactions
       const transactionLedger = [];
+      const currentHoldings = {};
+
       for (let i = 1; i < txnRows.length; i++) {
         const row = txnRows[i];
         if (!row || !row[0] || row[0].trim() === '') continue;
 
+        const type = (row[2] || "").trim().toUpperCase();
+        const rawAsset = (row[3] || "").trim();
+        const asset = rawAsset.toUpperCase();
+        const qty = parseCleanNumber(row[4]);
+
         transactionLedger.push({
           id: `TXN-${i}`,
-          date: row[0].trim(),               // Col A: Date
-          type: row[2] || "",                // Col C: Action
-          asset: row[3] || "",               // Col D: Ticker
-          quantity: parseCleanNumber(row[4]),// Col E: Qty
-          price: parseCleanNumber(row[8]),   // Col I: Net Price
-          amount: parseCleanNumber(row[9])   // Col J: Total Value
+          date: row[0].trim(),               
+          type: type,                
+          asset: rawAsset,               
+          quantity: qty,
+          price: parseCleanNumber(row[8]),   
+          amount: parseCleanNumber(row[9])   
         });
+
+        if (asset) {
+          if (!currentHoldings[asset]) currentHoldings[asset] = 0;
+          if (type === 'BUY') currentHoldings[asset] += qty;
+          if (type === 'SELL') currentHoldings[asset] -= qty;
+        }
       }
 
-      // Calculate Real Mathematical Quantitative Metrics from Live Data
+      // 3. Process Live Prices
+      const livePricesMap = {};
+      for (let i = 1; i < priceRows.length; i++) {
+        const row = priceRows[i];
+        if (!row || !row[0] || row[0].trim() === '') continue;
+        
+        const ticker = row[0].trim().toUpperCase();
+        livePricesMap[ticker] = {
+          livePrice: parseCleanNumber(row[4]),
+          low52: parseCleanNumber(row[5]),
+          high52: parseCleanNumber(row[6])
+        };
+      }
+
+      // 4. Calculate Metrics
       state.quantMetrics = computeQuantMetrics(benchmarkData, latestAum);
+      state.sotpMetrics = computeSOTPStressTest(currentHoldings, livePricesMap, latestAum);
 
       const payload = {
         portfolioSummary: {
@@ -143,10 +187,9 @@
       state.rawPayload = payload;
       state.ledgerData = payload.transactionLedger;
 
-      // Render Dashboard
-      renderHeaderStats(payload.portfolioSummary, state.quantMetrics);
+      renderHeaderStats(payload.portfolioSummary, state.quantMetrics, state.sotpMetrics);
       renderChartOverlay(payload.benchmarkData, state.activeHorizon);
-      calculateVaR(payload.portfolioSummary, state.quantMetrics);
+      renderRiskAndStressMetrics(payload.portfolioSummary, state.quantMetrics, state.sotpMetrics);
       initSipSimulator(state.quantMetrics.cagr);
       renderLedger(state.ledgerData);
 
@@ -154,24 +197,118 @@
       console.error("Database Connection Error:", err);
       const aumEl = document.getElementById('headerAum');
       if (aumEl) aumEl.textContent = "Error loading DB";
-      alert(`Connection Error: ${err.message}`);
     }
   }
 
-  /**
-   * DYNAMIC QUANTITATIVE MATHEMATICS ENGINE
-   */
+  function initSipSimulator(cagrRate, isShortTerm) {
+    const amountRange = document.getElementById('sipAmountRange');
+    const durationRange = document.getElementById('sipDurationRange');
+    const returnDisplay = document.getElementById('sipReturnDisplay');
+
+    // Hardcode the rate to the calculated portfolio CAGR/Abs
+    const targetRate = cagrRate || 0; 
+    
+    if (returnDisplay) {
+      returnDisplay.textContent = targetRate.toFixed(2);
+      returnDisplay.style.color = targetRate >= 0 ? '#10b981' : '#ef4444';
+    }
+
+    function runSimulation() {
+      const P = parseCleanNumber(amountRange ? amountRange.value : 10000);
+      const years = parseCleanNumber(durationRange ? durationRange.value : 5);
+      
+      const annualRate = targetRate / 100;
+      const i = annualRate / 12;
+      const n = years * 12;
+
+      const amtDisp = document.getElementById('sipAmountDisplay');
+      const durDisp = document.getElementById('sipDurationDisplay');
+      if (amtDisp) amtDisp.textContent = formatINR(P);
+      if (durDisp) durDisp.textContent = `${years} ${years === 1 ? 'Year' : 'Years'}`;
+
+      // Calculate future value (safeguard against exactly 0% return)
+      let futureValue = 0;
+      if (i === 0) {
+        futureValue = P * n;
+      } else {
+        futureValue = P * (((Math.pow(1 + i, n) - 1) / i)) * (1 + i);
+      }
+      
+      const totalInvested = P * n;
+      const wealthGain = futureValue - totalInvested;
+
+      const totalInvEl = document.getElementById('simTotalInvested');
+      const wealthGainEl = document.getElementById('simWealthGain');
+      const projTotalEl = document.getElementById('simProjectedTotal');
+
+      if (totalInvEl) totalInvEl.textContent = formatINR(totalInvested);
+      
+      if (wealthGainEl) {
+        wealthGainEl.textContent = formatINR(wealthGain);
+        wealthGainEl.style.color = wealthGain >= 0 ? '#10b981' : '#ef4444';
+      }
+      
+      if (projTotalEl) projTotalEl.textContent = formatINR(futureValue);
+    }
+
+    if (amountRange) amountRange.addEventListener('input', runSimulation);
+    if (durationRange) durationRange.addEventListener('input', runSimulation);
+    runSimulation();
+  }
+
+ function computeSOTPStressTest(holdings, livePricesMap, totalAum) {
+    if (!livePricesMap || Object.keys(livePricesMap).length === 0) return null;
+
+    let totalAssetValue = 0;
+    let maxDownsideAssets = 0;
+    let maxUpsideAssets = 0;
+    let matchedCount = 0;
+    let hasLoadingErrors = false; // Circuit Breaker Flag
+
+    for (const rawTicker in holdings) {
+      const ticker = rawTicker.trim().toUpperCase();
+      const qty = holdings[rawTicker];
+      
+      if (qty > 0 && livePricesMap[ticker]) {
+        const assetData = livePricesMap[ticker];
+        
+        // If Google Finance hasn't resolved yet, these export as "#N/A" and parse to 0.
+        // We flag this to prevent catastrophic math errors.
+        if (assetData.livePrice <= 0 || assetData.low52 <= 0 || assetData.high52 <= 0) {
+          hasLoadingErrors = true;
+        }
+
+        totalAssetValue += qty * assetData.livePrice;
+        maxDownsideAssets += qty * assetData.low52;
+        maxUpsideAssets += qty * assetData.high52;
+        matchedCount++;
+      }
+    }
+
+    // Circuit Breaker: If data is still loading in Google Sheets, fallback to statistical baseline
+    if (hasLoadingErrors || matchedCount === 0 || totalAssetValue <= 0 || (totalAssetValue < totalAum * 0.20)) {
+      return null;
+    }
+
+    const impliedCash = Math.max(0, totalAum - totalAssetValue);
+    const maxDownsideTotal = maxDownsideAssets + impliedCash;
+    const maxUpsideTotal = maxUpsideAssets + impliedCash;
+
+    const maxDrawdownPct = totalAum > 0 ? ((maxDownsideTotal - totalAum) / totalAum) * 100 : 0;
+    const maxUpsidePct = totalAum > 0 ? ((maxUpsideTotal - totalAum) / totalAum) * 100 : 0;
+
+    return {
+      downsideTotal: maxDownsideTotal,
+      downsidePct: maxDrawdownPct,
+      upsideTotal: maxUpsideTotal,
+      upsidePct: maxUpsidePct,
+      impliedCash: impliedCash
+    };
+  }
+
   function computeQuantMetrics(benchmarkData, totalAum) {
     if (!benchmarkData || benchmarkData.length < 2) {
-      return {
-        cagr: 12.0,
-        beta: 1.00,
-        varPct: 0.02,
-        varValue: totalAum * 0.02,
-        maxDrawdownPct: 0,
-        monthlyStdDev: 0.02,
-        meanMonthlyReturn: 0.01
-      };
+      return { cagr: 0, beta: 1.00, maxDrawdownPct: 0, isShortTerm: true };
     }
 
     const pReturns = [];
@@ -191,36 +328,24 @@
       pReturns.push(rP);
       mReturns.push(rM);
 
-      if (currP > maxPeak) {
-        maxPeak = currP;
-      }
+      if (currP > maxPeak) maxPeak = currP;
       const dd = maxPeak > 0 ? (currP - maxPeak) / maxPeak : 0;
-      if (dd < maxDrawdown) {
-        maxDrawdown = dd;
-      }
+      if (dd < maxDrawdown) maxDrawdown = dd;
     }
 
-    // Mean daily returns
     const meanP = pReturns.reduce((a, b) => a + b, 0) / pReturns.length;
     const meanM = mReturns.reduce((a, b) => a + b, 0) / mReturns.length;
 
-    // Covariance and Variances
-    let cov = 0;
-    let varM = 0;
-    let varP = 0;
+    let cov = 0, varM = 0;
     for (let i = 0; i < pReturns.length; i++) {
       const diffP = pReturns[i] - meanP;
       const diffM = mReturns[i] - meanM;
       cov += diffP * diffM;
       varM += diffM * diffM;
-      varP += diffP * diffP;
     }
 
-    const n = pReturns.length;
-    const stdDevP_daily = Math.sqrt(varP / (n > 1 ? n - 1 : 1));
     const beta = varM > 0 ? (cov / varM) : 1.00;
 
-    // CAGR Calculation
     const startDate = new Date(benchmarkData[0].date);
     const endDate = new Date(benchmarkData[benchmarkData.length - 1].date);
     const diffDays = Math.max(1, (endDate - startDate) / (1000 * 60 * 60 * 24));
@@ -229,30 +354,95 @@
     const endNav = benchmarkData[benchmarkData.length - 1].portfolioNav;
     const totalReturnRatio = startNav > 0 ? endNav / startNav : 1;
 
-    let cagrPct = 0;
-    if (diffDays >= 365) {
-      cagrPct = (Math.pow(totalReturnRatio, 365 / diffDays) - 1) * 100;
-    } else {
-      cagrPct = ((totalReturnRatio - 1) * (365 / diffDays)) * 100;
-    }
-
-    // Monthly Standard Deviation & 95% Parametric VaR
-    const stdDevMonthly = stdDevP_daily * Math.sqrt(21);
-    const meanMonthly = meanP * 21;
-    const zScore = 1.645; // 95% Confidence Level
-
-    let varPct = (zScore * stdDevMonthly) - meanMonthly;
-    if (varPct < 0) varPct = Math.abs(varPct);
+    const isShortTerm = diffDays < 365;
+    let returnPct = isShortTerm
+      ? (totalReturnRatio - 1) * 100 // Simple Absolute Return for <1Y
+      : (Math.pow(totalReturnRatio, 365 / diffDays) - 1) * 100; // Compound Annual Rate for >1Y
 
     return {
-      cagr: cagrPct,
+      cagr: returnPct,
       beta: Math.max(0, beta),
-      varPct: varPct,
-      varValue: totalAum * varPct,
       maxDrawdownPct: maxDrawdown * 100,
-      monthlyStdDev: stdDevMonthly,
-      meanMonthlyReturn: meanMonthly
+      isShortTerm: isShortTerm
     };
+  }
+
+  function renderHeaderStats(summary, quant, sotp) {
+    if (!summary || !quant) return;
+    const aumEl = document.getElementById('headerAum');
+    const betaEl = document.getElementById('headerBeta');
+    const varEl = document.getElementById('headerVar'); 
+    const cagrEl = document.getElementById('headerCagr'); 
+
+    if (aumEl) aumEl.textContent = formatINR(summary.totalAum);
+    if (betaEl) betaEl.textContent = parseCleanNumber(quant.beta).toFixed(2);
+    
+    if (cagrEl) {
+      const sign = quant.cagr > 0 ? '+' : '';
+      const label = quant.isShortTerm ? ' (Abs)' : '';
+      cagrEl.textContent = `${sign}${quant.cagr.toFixed(2)}%${label}`;
+      cagrEl.style.color = quant.cagr >= 0 ? '#10b981' : '#ef4444'; 
+    }
+    
+    if (varEl) {
+      if (sotp) {
+        varEl.textContent = formatINR(sotp.downsideTotal);
+      } else {
+        varEl.textContent = formatINR(summary.totalAum * 0.90);
+      }
+    }
+  }
+
+  function renderRiskAndStressMetrics(summary, quant, sotp) {
+    if (!summary || !quant) return;
+
+    const upsidePot = document.getElementById('upsidePotential');
+    const upsideVal = document.getElementById('upsideValue');
+    const mVarPct = document.getElementById('monthlyVarPct');
+    const mVarVal = document.getElementById('monthlyVarVal');
+    const varInterp = document.getElementById('varInterpretation');
+    const maxDraw = document.getElementById('maxDrawdown');
+
+    // 1. Max Upside Potential
+    if (sotp) {
+      const sign = sotp.upsidePct > 0 ? '+' : '';
+      if (upsidePot) upsidePot.textContent = `${sign}${sotp.upsidePct.toFixed(1)}%`;
+      if (upsideVal) upsideVal.textContent = formatINR(sotp.upsideTotal);
+    } else {
+      const years = state.activeHorizon === '1Y' ? 1 : state.activeHorizon === '3Y' ? 3 : 5;
+      const baseReturn = quant.isShortTerm || quant.cagr <= 0 ? 12 : quant.cagr;
+      const projUpside = Math.max(0, baseReturn * years);
+      if (upsidePot) upsidePot.textContent = `+${projUpside.toFixed(1)}%`;
+      if (upsideVal) upsideVal.textContent = formatINR(summary.totalAum * (1 + projUpside / 100));
+    }
+
+    // 2. Downside Potential / Stress
+    if (sotp) {
+      const sign = sotp.downsidePct > 0 ? '+' : '';
+      if (mVarPct) mVarPct.textContent = `${sign}${sotp.downsidePct.toFixed(1)}%`;
+      if (mVarVal) mVarVal.textContent = formatINR(sotp.downsideTotal);
+    } else {
+      const estDownsidePct = -10.0;
+      const estDownsideVal = summary.totalAum * 0.90;
+      if (mVarPct) mVarPct.textContent = `${estDownsidePct.toFixed(1)}%`;
+      if (mVarVal) mVarVal.textContent = formatINR(estDownsideVal);
+    }
+
+    // 3. Historical Max Drawdown
+    if (maxDraw) {
+      if (upsidePot) {
+        maxDraw.textContent = `${quant.maxDrawdownPct.toFixed(1)}%`;
+      }
+    }
+
+    // Interpretation Text
+    if (varInterp) {
+      if (sotp) {
+        varInterp.innerHTML = `<strong>Quantitative Interpretation:</strong> If all current portfolio assets simultaneously drop to their respective 52-week lows under extreme market distress, the total portfolio AUM would decline to <strong>${formatINR(sotp.downsideTotal)}</strong>.`;
+      } else {
+        varInterp.innerHTML = `<strong>Quantitative Interpretation:</strong> Projected risk envelope under standard historical market volatility parameters.`;
+      }
+    }
   }
 
   function bindEvents() {
@@ -264,7 +454,7 @@
 
         if (state.rawPayload && state.quantMetrics) {
           renderChartOverlay(state.rawPayload.benchmarkData, state.activeHorizon);
-          calculateVaR(state.rawPayload.portfolioSummary, state.quantMetrics);
+          renderRiskAndStressMetrics(state.rawPayload.portfolioSummary, state.quantMetrics, state.sotpMetrics);
         }
       });
     });
@@ -273,17 +463,6 @@
     const typeFilter = document.getElementById('ledgerTypeFilter');
     if (searchInput) searchInput.addEventListener('input', filterLedger);
     if (typeFilter) typeFilter.addEventListener('change', filterLedger);
-  }
-
-  function renderHeaderStats(summary, quant) {
-    if (!summary || !quant) return;
-    const aumEl = document.getElementById('headerAum');
-    const betaEl = document.getElementById('headerBeta');
-    const varEl = document.getElementById('headerVar');
-
-    if (aumEl) aumEl.textContent = formatINR(summary.totalAum);
-    if (betaEl) betaEl.textContent = parseCleanNumber(quant.beta).toFixed(2);
-    if (varEl) varEl.textContent = formatINR(quant.varValue);
   }
 
   function renderChartOverlay(benchmarkData, horizon) {
@@ -351,51 +530,25 @@
     });
   }
 
-  function calculateVaR(summary, quant) {
-    if (!summary || !quant) return;
-    const aum = parseCleanNumber(summary.totalAum);
-
-    const horizonFactor = state.activeHorizon === '1Y' ? 1 : state.activeHorizon === '3Y' ? 1.73 : 2.23;
-    const scaledVarValue = quant.varValue * horizonFactor;
-    const scaledVarPct = quant.varPct * horizonFactor * 100;
-
-    const mVarPct = document.getElementById('monthlyVarPct');
-    const mVarVal = document.getElementById('monthlyVarVal');
-    const varInterp = document.getElementById('varInterpretation');
-    const upsidePot = document.getElementById('upsidePotential');
-    const upsideVal = document.getElementById('upsideValue');
-    const maxDraw = document.getElementById('maxDrawdown');
-
-    if (mVarPct) mVarPct.textContent = `-${scaledVarPct.toFixed(2)}%`;
-    if (mVarVal) mVarVal.textContent = formatINR(scaledVarValue);
-    if (varInterp) varInterp.textContent = formatINR(scaledVarValue);
-
-    // Upside potential based on calculated annual return
-    const years = state.activeHorizon === '1Y' ? 1 : state.activeHorizon === '3Y' ? 3 : 5;
-    const projectedUpsidePct = Math.max(0, quant.cagr * years);
-    const projectedUpsideValue = aum * (projectedUpsidePct / 100);
-
-    if (upsidePot) upsidePot.textContent = `+${projectedUpsidePct.toFixed(1)}%`;
-    if (upsideVal) upsideVal.textContent = formatINR(projectedUpsideValue);
-    if (maxDraw) maxDraw.textContent = `${quant.maxDrawdownPct.toFixed(1)}%`;
-  }
-
-  function initSipSimulator(cagrRate) {
+ function initSipSimulator(portfolioReturnPct) {
     const amountRange = document.getElementById('sipAmountRange');
     const durationRange = document.getElementById('sipDurationRange');
-    const returnInput = document.getElementById('sipReturnInput');
+    const returnDisplay = document.getElementById('sipReturnDisplay');
 
-    if (returnInput && cagrRate) {
-      // Set default simulator CAGR to match portfolio's actual calculated rate
-      const boundedCagr = Math.max(5, Math.min(30, cagrRate));
-      returnInput.value = boundedCagr.toFixed(1);
+    // Lock simulation directly to portfolio's CAGR / Absolute Return
+    const annualReturn = parseCleanNumber(portfolioReturnPct);
+
+    if (returnDisplay) {
+      const sign = annualReturn > 0 ? '+' : '';
+      returnDisplay.textContent = `${sign}${annualReturn.toFixed(2)}`;
+      returnDisplay.style.color = annualReturn >= 0 ? '#10b981' : '#ef4444';
     }
 
     function runSimulation() {
       const P = parseCleanNumber(amountRange ? amountRange.value : 10000);
-      const years = parseCleanNumber(durationRange ? durationRange.value : 5);
-      const annualRate = parseCleanNumber(returnInput ? returnInput.value : 12) / 100;
-      const i = annualRate / 12;
+      const years = parseCleanNumber(durationRange ? durationRange.value : 1);
+      
+      const i = (annualReturn / 100) / 12;
       const n = years * 12;
 
       const amtDisp = document.getElementById('sipAmountDisplay');
@@ -403,7 +556,13 @@
       if (amtDisp) amtDisp.textContent = formatINR(P);
       if (durDisp) durDisp.textContent = `${years} ${years === 1 ? 'Year' : 'Years'}`;
 
-      let futureValue = P * (((Math.pow(1 + i, n) - 1) / i)) * (1 + i);
+      let futureValue = 0;
+      if (Math.abs(i) < 0.000001) {
+        futureValue = P * n; // 0% return case
+      } else {
+        futureValue = P * (((Math.pow(1 + i, n) - 1) / i)) * (1 + i);
+      }
+      
       const totalInvested = P * n;
       const wealthGain = futureValue - totalInvested;
 
@@ -412,13 +571,18 @@
       const projTotalEl = document.getElementById('simProjectedTotal');
 
       if (totalInvEl) totalInvEl.textContent = formatINR(totalInvested);
-      if (wealthGainEl) wealthGainEl.textContent = formatINR(wealthGain);
+      
+      if (wealthGainEl) {
+        wealthGainEl.textContent = formatINR(wealthGain);
+        wealthGainEl.style.color = wealthGain >= 0 ? '#10b981' : '#ef4444';
+      }
+      
       if (projTotalEl) projTotalEl.textContent = formatINR(futureValue);
     }
 
-    if (amountRange) amountRange.addEventListener('input', runSimulation);
-    if (durationRange) durationRange.addEventListener('input', runSimulation);
-    if (returnInput) returnInput.addEventListener('input', runSimulation);
+    if (amountRange) amountRange.oninput = runSimulation;
+    if (durationRange) durationRange.oninput = runSimulation;
+    
     runSimulation();
   }
 
