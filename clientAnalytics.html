@@ -157,6 +157,34 @@
       </div>
     </section>
 
+    <!-- ================= 4. DETAILED HOLDINGS ANALYTICS ================= -->
+    <section class="card holdings-card" style="margin-top: 24px;">
+      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h2>Active Portfolio Holdings</h2>
+          <p class="subtitle">Real-time asset-level valuation, cost basis, and 52-week position</p>
+        </div>
+        <span class="badge badge-primary" id="activeAssetCount">0 Assets</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="holdings-table">
+          <thead>
+            <tr>
+              <th>Asset & Timeline</th>
+              <th class="text-right">Live Market Data</th>
+              <th class="text-right">Position & Cost</th>
+              <th class="text-right">Valuation & Performance</th>
+              <th class="text-center">52W Range Position</th>
+            </tr>
+          </thead>
+          <tbody id="holdingsTableBody">
+            <!-- Dynamic rows injected via JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
     <!-- ================= 4. LIGHTNING FEED TRANSACTION LEDGER ================= -->
     <section class="card ledger-card">
       <div class="card-header flex-between">

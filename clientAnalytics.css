@@ -577,4 +577,82 @@ body {
 
 .btn-icon {
   font-size: 14px;
-}   
+}  
+
+/* Holdings Table Grid Styling */
+/* Full Width Holdings Card & Table Layout */
+.holdings-card {
+  grid-column: 1 / -1;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.holdings-table {
+  width: 100%;
+  table-layout: fixed; /* Forces columns to distribute evenly across full width */
+  border-collapse: collapse;
+  margin-top: 16px;
+  font-family: 'Inter', -apple-system, sans-serif;
+}
+
+.holdings-table th, .holdings-table td {
+  padding: 16px 12px;
+  border-bottom: 1px solid #1e293b;
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Two-Tier Typography */
+.tier-main {
+  font-weight: 600;
+  color: #f8fafc;
+  font-size: 0.95rem;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tier-sub {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-top: 4px;
+  display: block;
+}
+
+/* 52-Week Visual Range Component */
+.range-container {
+  width: 100%;
+  max-width: 160px;
+  margin: 0 auto;
+}
+
+.range-track {
+  width: 100%;
+  height: 6px;
+  background-color: #1e293b;
+  border-radius: 3px;
+  position: relative;
+  margin: 6px 0;
+}
+
+.range-pin {
+  width: 10px;
+  height: 10px;
+  background-color: #ffffff;
+  border: 2px solid #3b82f6;
+  border-radius: 50%;
+  position: absolute;
+  top: -2px;
+  transform: translateX(-50%);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+}
+
+.range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: #64748b;
+  font-family: monospace;
+}

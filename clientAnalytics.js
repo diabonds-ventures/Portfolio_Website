@@ -78,7 +78,7 @@ async function fetchClientData() {
       const fetchPromises = [
         fetch(NAV_CSV_URL + cb), 
         fetch(TXN_CSV_URL + cb)
-      ];
+       ];
       
       if (LIVE_PRICES_CSV_URL && !LIVE_PRICES_CSV_URL.includes("PASTE_YOUR")) {
         fetchPromises.push(fetch(LIVE_PRICES_CSV_URL + cb));
@@ -156,6 +156,7 @@ async function fetchClientData() {
       }
 
       // 3. Process Live Prices
+      // 3. Process Live Prices
       const livePricesMap = {};
       for (let i = 1; i < priceRows.length; i++) {
         const row = priceRows[i];
@@ -165,10 +166,10 @@ async function fetchClientData() {
         livePricesMap[ticker] = {
           livePrice: parseCleanNumber(row[4]),
           low52: parseCleanNumber(row[5]),
-          high52: parseCleanNumber(row[6])
+          high52: parseCleanNumber(row[6]),
+          change1D: parseCleanNumber(row[7]) // Reads Column H (1D% Change)
         };
       }
-
       // 4. Calculate Metrics
       state.quantMetrics = computeQuantMetrics(benchmarkData, latestAum);
       state.sotpMetrics = computeSOTPStressTest(currentHoldings, livePricesMap, latestAum);
@@ -192,12 +193,14 @@ async function fetchClientData() {
       renderRiskAndStressMetrics(payload.portfolioSummary, state.quantMetrics, state.sotpMetrics);
       initSipSimulator(state.quantMetrics.cagr);
       renderLedger(state.ledgerData);
+      renderDetailedHoldings(payload.transactionLedger, livePricesMap);
 
     } catch (err) {
       console.error("Database Connection Error:", err);
       const aumEl = document.getElementById('headerAum');
       if (aumEl) aumEl.textContent = "Error loading DB";
     }
+    
   }
 
   function initSipSimulator(cagrRate, isShortTerm) {
@@ -621,3 +624,171 @@ async function fetchClientData() {
   }
 
 })();
+// Safe date parser for DD/MM/YYYY or standard formats
+  function parseAppDate(dateStr) {
+    if (!dateStr) return new Date();
+    if (typeof dateStr === 'string' && dateStr.includes('/')) {
+      const parts = dateStr.split('/');
+      if (parts.length === 3) {
+        return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+      }
+    }
+    return new Date(dateStr);
+  }
+
+  function renderDetailedHoldings(ledger, livePricesMap) {
+    const tbody = document.getElementById('holdingsTableBody');
+    const countBadge = document.getElementById('activeAssetCount');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    const assetData = {};
+
+    const normalizeTicker = (t) => (t || "").replace(/^(NSE:|BSE:)/i, '').trim().toUpperCase();
+
+    const normalizedPrices = {};
+    if (livePricesMap) {
+      for (const key in livePricesMap) {
+        normalizedPrices[normalizeTicker(key)] = livePricesMap[key];
+      }
+    }
+    
+    // 1. Group ledger cashflows by asset
+    ledger.forEach(txn => {
+      const rawAsset = (txn.asset || "").trim();
+      const lookupKey = normalizeTicker(rawAsset);
+      if (!lookupKey || lookupKey === 'CASH') return; // Skip cash or empty
+
+      if (!assetData[lookupKey]) {
+        assetData[lookupKey] = {
+          displayName: rawAsset, // Keeps the full asset name (e.g. NSE:UJJIVANSFB or HDFCGOLD)
+          qty: 0,
+          totalBuyCost: 0,
+          totalBuyShares: 0,
+          firstDate: txn.date,
+          cashflows: []
+        };
+      }
+      
+      const dateObj = parseAppDate(txn.date);
+      
+      if (txn.type === 'BUY') {
+        assetData[lookupKey].qty += txn.quantity;
+        assetData[lookupKey].totalBuyShares += txn.quantity;
+        assetData[lookupKey].totalBuyCost += txn.amount;
+        assetData[lookupKey].cashflows.push({ amount: -txn.amount, date: dateObj });
+        
+        if (dateObj < parseAppDate(assetData[lookupKey].firstDate)) {
+           assetData[lookupKey].firstDate = txn.date;
+        }
+      } else if (txn.type === 'SELL') {
+        assetData[lookupKey].qty -= txn.quantity;
+        assetData[lookupKey].cashflows.push({ amount: txn.amount, date: dateObj });
+      }
+    });
+    
+    let activeCount = 0;
+    
+    // 2. Compute individual asset metrics
+    for (const lookupKey in assetData) {
+      const data = assetData[lookupKey];
+      const live = normalizedPrices[lookupKey];
+
+      if (data.qty <= 0 || !live) continue; 
+      
+      activeCount++;
+      const avgBuy = data.totalBuyShares > 0 ? (data.totalBuyCost / data.totalBuyShares) : 0;
+      const invested = data.qty * avgBuy;
+      const current = data.qty * live.livePrice;
+      const pnl = current - invested;
+      const pnlPct = invested > 0 ? (pnl / invested) * 100 : 0;
+      
+      // Calculate holding age correctly
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const daysHeld = Math.floor((new Date() - parseAppDate(data.firstDate)) / msPerDay);
+      const ageStr = daysHeld > 365 ? `${(daysHeld/365).toFixed(1)} Yrs` : `${Math.max(0, daysHeld)} Days`;
+      
+      // Structural Range Positioning
+      let rangePct = 50;
+      if (live.high52 > live.low52) {
+        rangePct = ((live.livePrice - live.low52) / (live.high52 - live.low52)) * 100;
+        rangePct = Math.max(0, Math.min(100, rangePct));
+      }
+      
+      // Calculate XIRR
+      const finalFlows = [...data.cashflows, { amount: current, date: new Date() }];
+      const xirrPct = calculateXIRR(finalFlows);
+      const xirrStr = isNaN(xirrPct) ? (pnlPct > 0 ? '+' : '') + pnlPct.toFixed(2) + '% (Abs)' : (xirrPct > 0 ? '+' : '') + (xirrPct * 100).toFixed(2) + '%';
+      
+      const pnlColor = pnl >= 0 ? '#10b981' : '#ef4444';
+      const changeColor = live.change1D >= 0 ? '#10b981' : '#ef4444';
+      const sign = live.change1D > 0 ? '+' : '';
+      
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="width: 26%;">
+          <span class="tier-main">${data.displayName}</span>
+          <span class="tier-sub">Held: ${ageStr}</span>
+        </td>
+        <td class="text-right" style="width: 18%; text-align: right;">
+          <span class="tier-main mono">₹${live.livePrice.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+          <span class="tier-sub mono" style="color: ${changeColor}">${sign}${live.change1D.toFixed(2)}% (1D)</span>
+        </td>
+        <td class="text-right" style="width: 18%; text-align: right;">
+          <span class="tier-main mono">${data.qty}</span>
+          <span class="tier-sub mono">Avg: ₹${avgBuy.toLocaleString('en-IN', {maximumFractionDigits: 2})}</span>
+        </td>
+        <td class="text-right" style="width: 20%; text-align: right;">
+          <span class="tier-main mono">₹${current.toLocaleString('en-IN', {maximumFractionDigits: 0})}</span>
+          <span class="tier-sub mono" style="color: ${pnlColor}">${pnl > 0 ? '+' : ''}₹${pnl.toLocaleString('en-IN', {maximumFractionDigits: 0})} | ${xirrStr}</span>
+        </td>
+        <td class="text-center" style="width: 18%;">
+          <div class="range-container">
+            <div class="range-track">
+              <div class="range-pin" style="left: ${rangePct}%;"></div>
+            </div>
+            <div class="range-labels">
+              <span>₹${live.low52.toFixed(1)}</span>
+              <span>₹${live.high52.toFixed(1)}</span>
+            </div>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    }
+    
+    if (countBadge) countBadge.textContent = `${activeCount} Assets`;
+  }
+
+  function calculateXIRR(cashflows, guess = 0.1) {
+    const maxIter = 100;
+    const tol = 1e-6;
+    let rate = guess;
+    
+    let hasPos = false, hasNeg = false;
+    for (let cf of cashflows) {
+      if (cf.amount > 0) hasPos = true;
+      if (cf.amount < 0) hasNeg = true;
+    }
+    if (!hasPos || !hasNeg) return NaN;
+
+    const t0 = cashflows[0].date.getTime();
+    
+    for (let i = 0; i < maxIter; i++) {
+      let f = 0;
+      let df = 0;
+      for (let j = 0; j < cashflows.length; j++) {
+        const cf = cashflows[j];
+        const t = (cf.date.getTime() - t0) / (1000 * 3600 * 24 * 365);
+        f += cf.amount / Math.pow(1 + rate, t);
+        // Avoid division by zero on same-day purchases
+        if (t > 0) df -= (t * cf.amount) / Math.pow(1 + rate, t + 1); 
+      }
+      if (Math.abs(df) < 1e-8) return NaN; // Failsafe
+      
+      const nextRate = rate - f / df;
+      if (Math.abs(nextRate - rate) < tol) return nextRate;
+      rate = nextRate;
+    }
+    return NaN;
+  }
