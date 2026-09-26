@@ -344,7 +344,7 @@ body {
 .quant-slider {
   -webkit-appearance: none;
   width: 100%;
-  height: 6px;
+  height: 6px;  
   border-radius: 3px;
   background: var(--card-border);
   outline: none;
