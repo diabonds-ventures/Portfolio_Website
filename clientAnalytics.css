@@ -656,3 +656,4 @@ body {
   color: #64748b;
   font-family: monospace;
 }
+.card { margin-bottom: 24px !important; }

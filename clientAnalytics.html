@@ -18,14 +18,21 @@
 </head>
 <body>
 
+  <!-- GLOBAL NAVIGATION (Independent Row) -->
+  <div style="width: 100%; max-width: 1400px; margin: 16px auto 0; padding: 0 24px; box-sizing: border-box;">
+    <a href="./clientDaashboard.html" style="color: #64748b; text-decoration: none; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; transition: color 0.2s;" onmouseover="this.style.color='#f8fafc'" onmouseout="this.style.color='#64748b'">
+      <span style="margin-right: 6px; font-size: 1.1rem; line-height: 1;">&larr;</span> Back to Dashboard
+    </a>
+  </div>
+
   <!-- ================= TOP NAVIGATION & RISK HEADER ================= -->
-  <header class="analytics-header">
+  <header class="analytics-header" style="margin-top: 12px;">
     <div class="header-brand">
       <div class="brand-badge">QUANT</div>
       <h1>Analytics <span>(Portfolio Intelligence)</span></h1>
     </div>
 
-<!-- Quick Stats Bar -->
+    <!-- Quick Stats Bar -->
     <div class="quick-stats-bar">
       <div class="stat-pill">
         <span class="stat-label">Total AUM</span>
@@ -44,6 +51,7 @@
         <span class="stat-value mono text-danger" id="headerVar">₹0.00</span>
       </div>
     </div>
+    
     <!-- 1-Tap Horizon Switcher -->
     <div class="horizon-switcher" role="group" aria-label="Time Horizon Switcher">
       <button class="horizon-btn active" data-horizon="1Y">1Y Horizon</button>
@@ -51,9 +59,6 @@
       <button class="horizon-btn" data-horizon="5Y">5Y Horizon</button>
     </div>
   </header>
-
-  <main class="analytics-grid">
-
     <!-- ================= 1. HERO BENCHMARK OVERLAY CHART ================= -->
     <section class="card chart-card">
       <div class="card-header">
@@ -71,6 +76,7 @@
         <canvas id="niftyOverlayChart"></canvas>
       </div>
     </section>
+
     <!-- ================= 2. VALUE-AT-RISK & RISK ENVELOPE ================= -->
     <section class="card risk-card">
       <div class="card-header">
@@ -100,6 +106,7 @@
         <p id="varInterpretation"><strong>Quantitative Interpretation:</strong> Loading statistical boundaries...</p>
       </div>
     </section>
+
     <!-- ================= 3. SIP / REGULAR INVESTMENT SIMULATOR ================= -->
     <section class="card simulator-card">
       <div class="card-header">
@@ -157,8 +164,8 @@
       </div>
     </section>
 
-    <!-- ================= 4. DETAILED HOLDINGS ANALYTICS ================= -->
-    <section class="card holdings-card" style="margin-top: 24px;">
+    <!-- ================= 4. DETAILED HOLDINGS ANALYTICS (ASSETS TABLE) ================= -->
+    <section class="card holdings-card" style="margin-top: 24px; grid-column: 1 / -1;">
       <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
         <div>
           <h2>Active Portfolio Holdings</h2>
@@ -185,15 +192,138 @@
       </div>
     </section>
 
-    <!-- ================= 4. LIGHTNING FEED TRANSACTION LEDGER ================= -->
-    <section class="card ledger-card">
+    <!-- ================= 5. INSTITUTIONAL QUANTITATIVE ENGINE PANEL ================= -->
+    <style>
+      .quant-tooltip-container { position: relative; display: inline-flex; align-items: center; cursor: help; margin-left: 6px; color: #64748b; font-size: 0.9rem;}
+      .quant-tooltip-container .quant-tooltip-text { visibility: hidden; width: 250px; background-color: #0f172a; color: #cbd5e1; text-align: left; border-radius: 8px; padding: 12px; position: absolute; z-index: 50; bottom: 130%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.2s; font-size: 0.75rem; border: 1px solid #334155; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); font-weight: normal; line-height: 1.5; white-space: normal; }
+      .quant-tooltip-container .quant-tooltip-text::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -6px; border-width: 6px; border-style: solid; border-color: #334155 transparent transparent transparent; }
+      .quant-tooltip-container:hover .quant-tooltip-text { visibility: visible; opacity: 1; }
+      .quant-tooltip-container:hover { color: #94a3b8; }
+    </style>
+
+    <!-- grid-column: 1 / -1 ensures this breaks out of the CSS grid columns and spans full width -->
+    <section class="card quant-section panel" style="grid-column: 1 / -1; display: block; width: 100%; box-sizing: border-box; margin: 0 0 24px 0; background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; padding: 24px;">
+      
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #1e293b; padding-bottom: 12px;">
+        <div>
+          <h3 style="color: #f8fafc; font-size: 1.1rem; margin: 0; font-weight: 600;">Institutional Risk & Quantitative Analytics</h3>
+          <span style="color: #64748b; font-size: 0.8rem;">365-Day Trailing Multi-Factor Analysis</span>
+        </div>
+        <span style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2); font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; font-weight: 600;">
+          LIVE QUANT ENGINE
+        </span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+        
+        <!-- Engine 1: Skill Deflator -->
+        <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span style="color: #f8fafc; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center;">
+              1Y Macro-Stripped Alpha
+              <div class="quant-tooltip-container">ⓘ
+                <span class="quant-tooltip-text">Analyzes the 1-year historical performance of the current asset basket, stripping out general market tailwinds to reveal true baseline asset quality.</span>
+              </div>
+            </span>
+            <span style="font-size: 0.7rem; color: #94a3b8; background: #0f172a; padding: 2px 6px; border-radius: 4px;">OLS Regression</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px;">
+            <span style="color: #94a3b8;">1Y Structural Return :</span>
+            <span id="rawPortReturn" style="color: #e2e8f0; font-family: monospace;">--</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 12px;">
+            <span style="color: #94a3b8;">Passive Macro Tailwind:</span>
+            <span id="macroTailwind" style="color: #e2e8f0; font-family: monospace;">--</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.9rem; padding-top: 8px; border-top: 1px solid #334155; font-weight: 600;">
+            <span style="color: #f8fafc;">Pure Stock-Picking Alpha:</span>
+            <span id="pureAlpha" style="font-family: monospace; font-size: 1rem;">--</span>
+          </div>
+        </div>
+
+        <!-- Engine 2: Convexity Profiling -->
+        <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span style="color: #f8fafc; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center;">
+              Convexity Profiling
+              <div class="quant-tooltip-container">ⓘ
+                <span class="quant-tooltip-text">Measures how much of the market's movement you capture. A Convexity Ratio above 1.0 indicates the portfolio gains more on up-days than it loses on down-days.</span>
+              </div>
+            </span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; text-align: center;">
+            <div style="background: #0f172a; padding: 8px; border-radius: 6px;">
+              <div style="color: #94a3b8; font-size: 0.7rem; text-transform: uppercase;">Upside Capture</div>
+              <div id="upCapture" style="color: #10b981; font-weight: 700; font-family: monospace; font-size: 1rem; margin-top: 2px;">--</div>
+            </div>
+            <div style="background: #0f172a; padding: 8px; border-radius: 6px;">
+              <div style="color: #94a3b8; font-size: 0.7rem; text-transform: uppercase;">Downside Capture</div>
+              <div id="downCapture" style="color: #ef4444; font-weight: 700; font-family: monospace; font-size: 1rem; margin-top: 2px;">--</div>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; background: #0f172a; padding: 8px 12px; border-radius: 6px;">
+            <span style="color: #cbd5e1;">Convexity Ratio (Target > 1.0):</span>
+            <span id="convexityScore" style="color: #3b82f6; font-weight: 700; font-family: monospace;">--</span>
+          </div>
+        </div>
+
+        <!-- Engine 3: Macro-Cancellation -->
+        <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span style="color: #f8fafc; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center;">
+              Internal Macro-Cancellation
+              <div class="quant-tooltip-container">ⓘ
+                <span class="quant-tooltip-text">Identifies if assets in the portfolio act as natural hedges against each other during currency or economic shocks, reducing overall structural risk.</span>
+              </div>
+            </span>
+          </div>
+          <div style="display: grid; grid-template-columns: 140px 1fr; gap: 8px; font-size: 0.85rem; margin-bottom: 8px; align-items: start;">
+            <span style="color: #ef4444; margin-top: 2px;">Currency Sensitive (+):</span>
+            <span id="exposedAssets" style="color: #e2e8f0; font-family: monospace; text-align: right; line-height: 1.4;">--</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 140px 1fr; gap: 8px; font-size: 0.85rem; margin-bottom: 12px; align-items: start;">
+            <span style="color: #10b981; margin-top: 2px;">Currency Hedges (-):</span>
+            <span id="hedgeAssets" style="color: #e2e8f0; font-family: monospace; text-align: right; line-height: 1.4;">--</span>
+          </div>
+          <div id="hedgeVerdict" style="font-size: 0.8rem; color: #94a3b8; padding-top: 8px; border-top: 1px solid #334155;">
+            Analyzing macro structure...
+          </div>
+        </div>
+
+        <!-- Engine 4: Tail-Risk Contagion -->
+        <div style="background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span style="color: #f8fafc; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center;">
+              Tail-Risk Contagion
+              <div class="quant-tooltip-container">ⓘ
+                <span class="quant-tooltip-text">Scans historical data for the worst 5% of market days and calculates the probability of specific assets crashing simultaneously (systemic contagion).</span>
+              </div>
+            </span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 12px;">
+            <span style="color: #94a3b8;">Stress Event Threshold:</span>
+            <span id="contagionThreshold" style="color: #e2e8f0; font-family: monospace;">--</span>
+          </div>
+          <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 12px; border-radius: 6px;">
+            <span style="color: #fca5a5; font-size: 0.75rem; font-weight: 600; display: block; margin-bottom: 6px;">Primary Contagion Vectors:</span>
+            <div id="contagionList" style="color: #f8fafc; font-family: monospace; font-size: 0.8rem; line-height: 1.5;">
+              Scanning market tail risks...
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= 6. LIGHTNING FEED TRANSACTION LEDGER ================= -->
+    <section class="card ledger-card" style="grid-column: 1 / -1;">
       <div class="card-header flex-between">
         <div>
           <h2>Lightning Feed Transaction Ledger</h2>
           <p class="card-subtitle">Real-time sub-millisecond searchable transaction record</p>
         </div>
         <div class="ledger-controls">
-          <input type="text" id="ledgerSearchInput" placeholder="⚡ Search by asset, ID, or type..." class="quant-search-input" />
+          <input type="text" id="ledgerSearchInput" placeholder="Search by asset, ID, or type..." class="quant-search-input" />
           <select id="ledgerTypeFilter" class="quant-select">
             <option value="ALL">All Types</option>
             <option value="BUY">BUY</option>

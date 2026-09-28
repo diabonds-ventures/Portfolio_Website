@@ -10,6 +10,8 @@
   const NAV_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS7I_zj5rMDE3MtKOZj2A4UMYt_dn38Y3MxBxyMCflePaHRDYmROUwWrlvvCQ7idR87n_TY-YPEhZzA/pub?gid=702735038&single=true&output=csv";
   const TXN_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS7I_zj5rMDE3MtKOZj2A4UMYt_dn38Y3MxBxyMCflePaHRDYmROUwWrlvvCQ7idR87n_TY-YPEhZzA/pub?gid=705567559&single=true&output=csv";
   const LIVE_PRICES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS7I_zj5rMDE3MtKOZj2A4UMYt_dn38Y3MxBxyMCflePaHRDYmROUwWrlvvCQ7idR87n_TY-YPEhZzA/pub?gid=0&single=true&output=csv";
+  const QUANT_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS7I_zj5rMDE3MtKOZj2A4UMYt_dn38Y3MxBxyMCflePaHRDYmROUwWrlvvCQ7idR87n_TY-YPEhZzA/pub?gid=2014969875&single=true&output=csv";
+
 
   const state = {
     clientId: null,
@@ -109,7 +111,7 @@
 
   // --- DATA FETCHING & PARSING ---
 
-  async function fetchClientData() {
+ async function fetchClientData() {
     try {
       const cb = `&t=${new Date().getTime()}`;
       const fetchPromises = [fetch(NAV_CSV_URL + cb), fetch(TXN_CSV_URL + cb)];
@@ -150,17 +152,20 @@
         });
       }
 
-      // 2. Process Transactions
+      // 2. Process Transactions (Now tracks running cost and quantities)
       const transactionLedger = [];
       const currentHoldings = {};
+      const assetInvested = {};
 
       for (let i = 1; i < txnRows.length; i++) {
         const row = txnRows[i];
         if (!row || !row[0] || row[0].trim() === '') continue;
         const type = (row[2] || "").trim().toUpperCase();
         const rawAsset = (row[3] || "").trim();
-        const asset = rawAsset.toUpperCase();
+        const asset = rawAsset.replace(/^(NSE:|BSE:)/i, '').trim().toUpperCase(); // Clean ticker
         const qty = parseCleanNumber(row[4]);
+        const price = parseCleanNumber(row[8]);
+        const amount = parseCleanNumber(row[9]);
 
         transactionLedger.push({
           id: `TXN-${i}`,
@@ -168,18 +173,28 @@
           type: type,                
           asset: rawAsset,               
           quantity: qty,
-          price: parseCleanNumber(row[8]),   
-          amount: parseCleanNumber(row[9])   
+          price: price,   
+          amount: amount   
         });
 
         if (asset) {
-          if (!currentHoldings[asset]) currentHoldings[asset] = 0;
-          if (type === 'BUY') currentHoldings[asset] += qty;
-          if (type === 'SELL') currentHoldings[asset] -= qty;
+          if (!currentHoldings[asset]) {
+              currentHoldings[asset] = 0;
+              assetInvested[asset] = 0;
+          }
+          if (type === 'BUY') {
+              currentHoldings[asset] += qty;
+              assetInvested[asset] += amount;
+          }
+          if (type === 'SELL') {
+              const avgCost = currentHoldings[asset] > 0 ? (assetInvested[asset] / currentHoldings[asset]) : 0;
+              currentHoldings[asset] -= qty;
+              assetInvested[asset] -= (qty * avgCost);
+          }
         }
       }
 
-      // 3. Process Live Prices & Asset Names (Cols F, G, H, I -> Indices 5, 6, 7, 8)
+      // 3. Process Live Prices & Inject Quantities for Quant Engine
       const livePricesMap = {};
       const assetNames = {};
       
@@ -190,16 +205,25 @@
         const ticker = row[0].toString().trim();
         const cleanTicker = ticker.replace(/^(NSE:|BSE:)/i, '').trim().toUpperCase();
         
-        // Asset Names from Column B (Index 1)
         assetNames[cleanTicker] = row[1] ? row[1].toString().trim() : cleanTicker;
+        
+        const livePrice = parseCleanNumber(row[5]);
+        const qty = currentHoldings[cleanTicker] || 0;
+        const avgPrice = qty > 0 ? (assetInvested[cleanTicker] / qty) : 0;
 
         livePricesMap[cleanTicker] = {
-          livePrice: parseCleanNumber(row[5]),
+          livePrice: livePrice,
           low52: parseCleanNumber(row[6]),
           high52: parseCleanNumber(row[7]),
-          change1D: parseCleanNumber(row[8]) 
+          change1D: parseCleanNumber(row[8]),
+          // 👉 NEW: Injecting specific holding data
+          quantity: qty,
+          avgBuyPrice: avgPrice,
+          totalValue: qty * livePrice 
         };
       }
+
+      console.log("UPDATED PORTFOLIO DATA STRUCTURE:", livePricesMap);
 
       // 4. Calculate Metrics
       state.quantMetrics = computeQuantMetrics(benchmarkData, latestAum);
@@ -227,6 +251,7 @@
       
       renderLedger(state.ledgerData);
       renderDetailedHoldings(payload.transactionLedger, livePricesMap, assetNames);
+      fetchQuantData(livePricesMap);
 
     } catch (err) {
       console.error("Database Connection Error:", err);
@@ -503,16 +528,26 @@
           }
         ]
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: { intersect: false, mode: 'index' },
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { grid: { display: false }, ticks: { color: '#6b7280' } },
-          y: { grid: { color: 'rgba(255, 255, 255, 0.04)' }, ticks: { color: '#6b7280' } }
-        }
+  options: {
+  responsive: true,
+  maintainAspectRatio: false,
+  scales: {
+    x: {
+      ticks: {
+        autoSkip: true,
+        maxTicksLimit: 6, // 👉 FIX: Forces only 6 dates to show evenly across the axis
+        maxRotation: 0,   // Keeps labels perfectly horizontal
+        color: '#94a3b8'
+      },
+      grid: {
+        display: false // Cleans up vertical lines
       }
+    },
+    y: {
+      // your existing y-axis config...
+    }
+  }
+}
     });
   }
 
@@ -776,3 +811,226 @@
   }
 
 })();
+
+// --- QUANTITATIVE ENGINE SCRIPT ---
+
+async function fetchQuantData(livePricesMap) {
+  console.log("PORTFOLIO DATA STRUCTURE:", livePricesMap);
+  if (!livePricesMap || Object.keys(livePricesMap).length === 0) {
+      setTimeout(() => fetchQuantData(livePricesMap), 500);
+      return; 
+  }
+
+  try {
+    // 👉 PASTE YOUR NEW GOOGLE APPS SCRIPT WEB APP URL HERE 👈
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyVd8igQjQEP07YN9yeS2Upzsm4q1nJf6h3KQA3qnrHl5Z-AF8Yogtet0cdwi2vSJJd/exec"; 
+    
+    // Now we fetch instantly from your private cache, avoiding Google's rate limits
+    const response = await fetch(APPS_SCRIPT_URL);
+    if (!response.ok) throw new Error("Cached Fetch Failed");
+    
+    const text = await response.text();
+    const lines = text.split(/\r?\n/).filter(line => line.trim().length > 0);
+    if (lines.length < 3) return;
+
+    const normalizeTicker = (t) => (t || "").replace(/^(NSE:|BSE:)/i, '').trim().toUpperCase();
+    const headers = lines[0].split(',').map(h => normalizeTicker(h));
+    const dataMatrix = [];
+
+    for (let i = 2; i < lines.length; i++) {
+      const cols = lines[i].split(',');
+      if (!cols[0]) continue;
+      const row = {};
+      for (let j = 0; j < headers.length; j++) {
+        const val = cols[j] ? cols[j].trim() : "";
+        row[headers[j]] = (j === 0) ? val : parseFloat(val.replace(/[^0-9.-]/g, '')) || 0;
+      }
+      dataMatrix.push(row);
+    }
+
+    // Run the local math engine on the instantly delivered data
+    runQuantEngines(dataMatrix, livePricesMap, headers);
+
+  } catch (err) {
+    console.error("Quant Engine Error:", err);
+  }
+}
+
+function runQuantEngines(data, livePricesMap, headers) {
+  if (!data || data.length < 5) return;
+
+  const normalizeTicker = (t) => (t || "").replace(/^(NSE:|BSE:)/i, '').trim().toUpperCase();
+  const activeKeys = Object.keys(livePricesMap || {}).map(k => normalizeTicker(k));
+
+  const assetKeys = headers.filter(h => h !== 'DATE' && h !== 'NIFTY50' && h !== 'USDINR' && h !== '');
+  
+  const returns = { NIFTY50: [], USDINR: [], PORTFOLIO: [] };
+  const assetReturns = {};
+  assetKeys.forEach(k => assetReturns[k] = []);
+
+ // 👉 NEW: Calculate Total Active Portfolio Value for Weighting
+  let totalPortfolioValue = 0;
+  activeKeys.forEach(k => {
+    if (livePricesMap[k] && livePricesMap[k].totalValue > 0) {
+      totalPortfolioValue += livePricesMap[k].totalValue;
+    }
+  });
+
+  // Compute Daily Percentage Returns Safely (Capital-Weighted)
+  for (let i = 1; i < data.length; i++) {
+    const prev = data[i - 1];
+    const curr = data[i];
+
+    const rNifty = (prev.NIFTY50 > 0 && curr.NIFTY50 > 0) ? (curr.NIFTY50 - prev.NIFTY50) / prev.NIFTY50 : 0;
+    const rUsd = (prev.USDINR > 0 && curr.USDINR > 0) ? (curr.USDINR - prev.USDINR) / prev.USDINR : 0;
+
+    returns.NIFTY50.push(rNifty);
+    returns.USDINR.push(rUsd);
+
+    let dailyPortReturn = 0;
+    let totalWeightUsed = 0;
+
+    assetKeys.forEach(k => {
+      if (prev[k] > 0 && curr[k] > 0) {
+        const rAsset = (curr[k] - prev[k]) / prev[k];
+        assetReturns[k].push(rAsset);
+
+        if (activeKeys.includes(k) && livePricesMap[k]) {
+          // Determine exact percentage weight of this asset in your portfolio
+          const weight = totalPortfolioValue > 0 ? (livePricesMap[k].totalValue / totalPortfolioValue) : 0;
+          
+          dailyPortReturn += (rAsset * weight);
+          totalWeightUsed += weight;
+        }
+      } else {
+        assetReturns[k].push(0);
+      }
+    });
+
+    // Normalize daily return to account for missing prices on specific days
+    returns.PORTFOLIO.push(totalWeightUsed > 0 ? (dailyPortReturn / totalWeightUsed) : 0);
+  }
+  
+  const n = returns.PORTFOLIO.length;
+  if (n === 0) return;
+
+  // 1. MACRO-STRIPPED ALPHA
+  let sumY = 0, sumX1 = 0, sumX2 = 0, sumX1y = 0, sumX2y = 0, sumX1X2 = 0, sumX1sq = 0, sumX2sq = 0;
+
+  for (let i = 0; i < n; i++) {
+    const y = returns.PORTFOLIO[i];
+    const x1 = returns.NIFTY50[i];
+    const x2 = returns.USDINR[i];
+
+    sumY += y; sumX1 += x1; sumX2 += x2;
+    sumX1y += x1 * y; sumX2y += x2 * y; sumX1X2 += x1 * x2;
+    sumX1sq += x1 * x1; sumX2sq += x2 * x2;
+  }
+
+  const S11 = sumX1sq - (sumX1 * sumX1) / n;
+  const S22 = sumX2sq - (sumX2 * sumX2) / n;
+  const S12 = sumX1X2 - (sumX1 * sumX2) / n;
+  const S1y = sumX1y - (sumX1 * sumY) / n;
+  const S2y = sumX2y - (sumX2 * sumY) / n;
+
+  const delta = S11 * S22 - S12 * S12;
+  let betaNifty = 0, betaUsd = 0;
+
+  if (Math.abs(delta) > 1e-10) {
+    betaNifty = (S22 * S1y - S12 * S2y) / delta;
+    betaUsd = (S11 * S2y - S12 * S1y) / delta;
+  }
+
+  const rawPortTotal = sumY * 100;
+  const macroTailwind = (betaNifty * sumX1 + betaUsd * sumX2) * 100;
+  const pureAlpha = rawPortTotal - macroTailwind;
+
+  document.getElementById('rawPortReturn').textContent = `${rawPortTotal >= 0 ? '+' : ''}${rawPortTotal.toFixed(2)}%`;
+  document.getElementById('macroTailwind').textContent = `${macroTailwind >= 0 ? '+' : ''}${macroTailwind.toFixed(2)}%`;
+  
+  const alphaEl = document.getElementById('pureAlpha');
+  alphaEl.textContent = `${pureAlpha >= 0 ? '+' : ''}${pureAlpha.toFixed(2)}%`;
+  alphaEl.style.color = pureAlpha >= 0 ? '#10b981' : '#ef4444';
+
+  // 2. CONVEXITY PROFILING
+  let upPort = 0, upBench = 0, downPort = 0, downBench = 0;
+
+  for (let i = 0; i < n; i++) {
+    if (returns.NIFTY50[i] > 0) {
+      upBench += returns.NIFTY50[i];
+      upPort += returns.PORTFOLIO[i];
+    } else if (returns.NIFTY50[i] < 0) {
+      downBench += returns.NIFTY50[i];
+      downPort += returns.PORTFOLIO[i];
+    }
+  }
+
+  const upCap = upBench === 0 ? 100 : (upPort / upBench) * 100;
+  const downCap = downBench === 0 ? 100 : (downPort / downBench) * 100;
+  const convexity = downCap === 0 ? 1.0 : (upCap / Math.abs(downCap));
+
+  document.getElementById('upCapture').textContent = `${upCap.toFixed(0)}%`;
+  document.getElementById('downCapture').textContent = `${Math.abs(downCap).toFixed(0)}%`;
+  
+  const convEl = document.getElementById('convexityScore');
+  convEl.textContent = convexity.toFixed(2);
+  convEl.style.color = convexity >= 1.0 ? '#10b981' : '#f59e0b';
+
+  // 3. INTERNAL MACRO-CANCELLATION
+  const posHedges = [], negHedges = [];
+  const meanUsd = sumX2 / n;
+
+  activeKeys.forEach(k => {
+    if (!assetReturns[k] || assetReturns[k].length === 0) return;
+    let cov = 0, varUsd = 0;
+    const meanAsset = assetReturns[k].reduce((a, b) => a + b, 0) / n;
+
+    for (let i = 0; i < n; i++) {
+      cov += (returns.USDINR[i] - meanUsd) * (assetReturns[k][i] - meanAsset);
+      varUsd += Math.pow(returns.USDINR[i] - meanUsd, 2);
+    }
+    const beta = varUsd === 0 ? 0 : cov / varUsd;
+    if (beta > 0.3) posHedges.push(k);
+    if (beta < -0.3) negHedges.push(k);
+  });
+
+  document.getElementById('exposedAssets').textContent = posHedges.length > 0 ? posHedges.join(', ') : 'None';
+  document.getElementById('hedgeAssets').textContent = negHedges.length > 0 ? negHedges.join(', ') : 'None';
+  
+  const hedgeV = document.getElementById('hedgeVerdict');
+  if (posHedges.length > 0 && negHedges.length > 0) {
+    hedgeV.innerHTML = '<span style="color:#10b981;">✓ Structurally Hedged:</span> Internal offsets dampen currency shocks.';
+  } else {
+    hedgeV.innerHTML = '<span style="color:#f59e0b;">⚠ Directional Exposure:</span> Lack of natural internal hedges.';
+  }
+
+  // 4. TAIL-RISK CONTAGION
+  const sortedNifty = [...returns.NIFTY50].sort((a, b) => a - b);
+  const tailThreshold = sortedNifty[Math.floor(n * 0.05)] || -0.015;
+
+  document.getElementById('contagionThreshold').textContent = `Nifty < ${(tailThreshold * 100).toFixed(2)}%`;
+
+  const tailIndices = [];
+  for (let i = 0; i < n; i++) {
+    if (returns.NIFTY50[i] <= tailThreshold) tailIndices.push(i);
+  }
+
+  const contagionMap = [];
+  activeKeys.forEach(k => {
+    if (!assetReturns[k]) return;
+    let coDrops = 0;
+    tailIndices.forEach(idx => {
+      if (assetReturns[k][idx] < 0) coDrops++;
+    });
+    const prob = tailIndices.length > 0 ? (coDrops / tailIndices.length) * 100 : 0;
+    if (prob > 50) contagionMap.push({ asset: k, prob });
+  });
+
+  contagionMap.sort((a, b) => b.prob - a.prob);
+  const cList = document.getElementById('contagionList');
+  if (contagionMap.length === 0) {
+    cList.innerHTML = '<span style="color:#10b981;">No high-contagion assets detected.</span>';
+  } else {
+    cList.innerHTML = contagionMap.slice(0, 3).map(c => `<div><strong>${c.asset}</strong>: ${c.prob.toFixed(0)}% Co-Drop Risk</div>`).join('');
+  }
+}
