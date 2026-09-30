@@ -724,7 +724,15 @@
       
       const finalFlows = [...data.cashflows, { amount: current, date: new Date() }];
       const xirrPct = calculateXIRR(finalFlows);
-      const xirrStr = isNaN(xirrPct) ? (pnlPct > 0 ? '+' : '') + pnlPct.toFixed(2) + '% (Abs)' : (xirrPct > 0 ? '+' : '') + (xirrPct * 100).toFixed(2) + '%';
+      
+      // 👉 THE FIX: Prevent XIRR explosion on short-term trades
+      // Force Absolute Return if held for less than 30 days (or if XIRR fails)
+      let xirrStr = "";
+      if (daysHeld < 30 || isNaN(xirrPct)) {
+        xirrStr = (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(2) + '% (Abs)';
+      } else {
+        xirrStr = (xirrPct >= 0 ? '+' : '') + (xirrPct * 100).toFixed(2) + '% (XIRR)';
+      }
       
       const pnlColor = pnl >= 0 ? '#10b981' : '#ef4444';
       const changeColor = live.change1D >= 0 ? '#10b981' : '#ef4444';
@@ -910,7 +918,7 @@ function runQuantEngines(data, livePricesMap, headers) {
     // Normalize daily return to account for missing prices on specific days
     returns.PORTFOLIO.push(totalWeightUsed > 0 ? (dailyPortReturn / totalWeightUsed) : 0);
   }
-  
+
   const n = returns.PORTFOLIO.length;
   if (n === 0) return;
 
