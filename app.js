@@ -3,6 +3,7 @@
 // ==========================================
 const clientDatabase = {
   'DiabondsVentures':  { pin: '0000', name: 'Diabonds Ventures' },
+  'arunfrancis': { pin: '1234', name: 'Arun Francis' },
   'ashwin': { pin: '5678', name: 'Ashwin' },
 };
 
