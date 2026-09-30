@@ -6,7 +6,7 @@ const clientDatabase = {
   'arunfrancis': { pin: '1234', name: 'Arun Francis' },
   'ashwin': { pin: '5678', name: 'Ashwin' },
 };
-
+  
 // ==========================================
 // 2. THE PAGE ROUTER & SECURITY
 // ==========================================
