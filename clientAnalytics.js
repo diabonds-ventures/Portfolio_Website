@@ -111,7 +111,7 @@
 
   // --- DATA FETCHING & PARSING ---
 
- async function fetchClientData() {
+async function fetchClientData() {
     try {
       const cb = `&t=${new Date().getTime()}`;
       const fetchPromises = [fetch(NAV_CSV_URL + cb), fetch(TXN_CSV_URL + cb)];
@@ -134,7 +134,7 @@
       const txnRows = parseCSV(txnText);
       const priceRows = priceText ? parseCSV(priceText) : [];
 
-      // 1. Process Historical NAV
+      // 1. Process Historical NAV (Mapped to your specific columns)
       const benchmarkData = [];
       let latestAum = 0;
       let inceptionDate = null;
@@ -142,17 +142,27 @@
       for (let i = 1; i < navRows.length; i++) {
         const row = navRows[i];
         if (!row || !row[0] || row[0].trim() === '') continue;
-        const dateStr = row[0].trim();              
-        latestAum = parseCleanNumber(row[2]);
+        
+        // 1. Standardize the URL ID and Sheet ID (lowercase, no spaces)
+        const targetId = state.clientId ? state.clientId.toLowerCase().replace(/\s+/g, '') : null;
+        const sheetId = (row[1] || "").toLowerCase().replace(/\s+/g, '');
+
+        // 2. STRICT LOCKDOWN: If there is no URL ID, or it doesn't match the sheet, skip!
+        if (!targetId || sheetId !== targetId) continue;
+
+        // 3. Map Data
+        const dateStr = row[0] ? row[0].trim() : "";         // Col A: Date
+        latestAum = parseCleanNumber(row[2]);                // Col C: Total Portfolio Value
+        
         if (!inceptionDate) inceptionDate = dateStr;
         benchmarkData.push({
           date: dateStr,
-          portfolioNav: parseCleanNumber(row[4]),
-          niftyNav: parseCleanNumber(row[8])
+          portfolioNav: parseCleanNumber(row[4]),            // Col E: NAV
+          niftyNav: parseCleanNumber(row[8])                 // Col I: Nifty_50_NAV
         });
       }
 
-      // 2. Process Transactions (Now tracks running cost and quantities)
+      // 2. Process Transactions (Mapped to your specific columns)
       const transactionLedger = [];
       const currentHoldings = {};
       const assetInvested = {};
@@ -160,16 +170,25 @@
       for (let i = 1; i < txnRows.length; i++) {
         const row = txnRows[i];
         if (!row || !row[0] || row[0].trim() === '') continue;
-        const type = (row[2] || "").trim().toUpperCase();
-        const rawAsset = (row[3] || "").trim();
-        const asset = rawAsset.replace(/^(NSE:|BSE:)/i, '').trim().toUpperCase(); // Clean ticker
-        const qty = parseCleanNumber(row[4]);
-        const price = parseCleanNumber(row[8]);
-        const amount = parseCleanNumber(row[9]);
+        
+        // 1. Standardize the URL ID and Sheet ID (lowercase, no spaces)
+        const targetId = state.clientId ? state.clientId.toLowerCase().replace(/\s+/g, '') : null;
+        const sheetId = (row[1] || "").toLowerCase().replace(/\s+/g, '');
+
+        // 2. STRICT LOCKDOWN: If there is no URL ID, or it doesn't match the sheet, skip!
+        if (!targetId || sheetId !== targetId) continue;
+
+        // 3. Map Data exactly to your columns
+        const type = (row[2] || "").trim().toUpperCase();    // Col C: Action
+        const rawAsset = (row[3] || "").trim();              // Col D: Ticker
+        const asset = rawAsset.replace(/^(NSE:|BSE:)/i, '').trim().toUpperCase();
+        const qty = parseCleanNumber(row[4]);                // Col E: Shares / Qty
+        const price = parseCleanNumber(row[8]);              // Col I: Net Price (INR)
+        const amount = parseCleanNumber(row[9]);             // Col J: Total Value (INR)
 
         transactionLedger.push({
           id: `TXN-${i}`,
-          date: row[0].trim(),               
+          date: row[0] ? row[0].trim() : "",                 // Col A: Date
           type: type,                
           asset: rawAsset,               
           quantity: qty,
@@ -216,14 +235,11 @@
           low52: parseCleanNumber(row[6]),
           high52: parseCleanNumber(row[7]),
           change1D: parseCleanNumber(row[8]),
-          // 👉 NEW: Injecting specific holding data
           quantity: qty,
           avgBuyPrice: avgPrice,
           totalValue: qty * livePrice 
         };
       }
-
-      console.log("UPDATED PORTFOLIO DATA STRUCTURE:", livePricesMap);
 
       // 4. Calculate Metrics
       state.quantMetrics = computeQuantMetrics(benchmarkData, latestAum);
@@ -733,7 +749,7 @@
       } else {
         xirrStr = (xirrPct >= 0 ? '+' : '') + (xirrPct * 100).toFixed(2) + '% (XIRR)';
       }
-      
+
       const pnlColor = pnl >= 0 ? '#10b981' : '#ef4444';
       const changeColor = live.change1D >= 0 ? '#10b981' : '#ef4444';
       const sign = live.change1D > 0 ? '+' : '';

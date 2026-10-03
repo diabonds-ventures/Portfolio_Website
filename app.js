@@ -6,7 +6,7 @@ const clientDatabase = {
   'arunfrancis': { pin: '1234', name: 'Arun Francis' },
   'ashwin': { pin: '5678', name: 'Ashwin' },
 };
-  
+
 // ==========================================
 // 2. THE PAGE ROUTER & SECURITY
 // ==========================================
@@ -395,6 +395,13 @@ async function setupClientDashboard() {
       e.preventDefault();
       sessionStorage.clear();
       window.location.replace('login.html'); 
+    });
+  }
+
+  const quantBtn = document.getElementById('quant-btn');
+  if(quantBtn) {
+    quantBtn.addEventListener('click', () => {
+      window.location.href = `clientAnalytics.html?clientId=${clientId}`;
     });
   }
 
