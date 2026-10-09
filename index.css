@@ -696,14 +696,9 @@ body {
     line-height: 1.2 !important;
   }
 
-  /* --- 4. THE FIRM DASHBOARD (Bulletproof Block Layout) --- */
+  /* --- 4. THE FIRM DASHBOARD (Cards & Layout) --- */
   
-  /* Kill the buggy snap-scroll effect */
-  html {
-    scroll-snap-type: none !important; 
-  }
-
-  /* Safely stack the main containers */
+  /* 1. Stack the main containers */
   .dashboard-grid, .charts-container,
   div[style*="display: grid"]:not(.dia-grid), 
   div[style*="display:grid"]:not(.dia-grid),
@@ -713,40 +708,66 @@ body {
     flex-direction: column !important;
     width: 100% !important;
     height: auto !important;
-    gap: 1.5rem !important; /* Keeps containers separated */
+    gap: 1.5rem !important; 
     box-sizing: border-box !important;
   }
 
-  /* Let cards size naturally based on their content! */
-  .card, 
-  div[style*="background-color: #fff"], 
-  div[style*="background-color: #1a1a1a"],
-  div[style*="background-color: #111"] {
+  /* 2. THE WHITE CHART CARDS (Make them bigger) */
+  /* Targets cards that DO NOT have dark backgrounds */
+  .card:not([style*="111"]):not([style*="1a1a1a"]), 
+  div[style*="background-color: #fff"],
+  div[style*="background-color:#fff"] {
+    display: block !important;
     width: 100% !important;
-    max-width: 100% !important;
-    
-    /* 👉 THE FIX: Removed 75vh so cards shrink to fit their content perfectly */
-    height: auto !important; 
-    min-height: min-content !important; 
-    
-    /* 👉 THE FIX: Reverted to a standard block so text stops floating out of bounds */
-    display: block !important; 
-    
-    padding: 1.5rem !important; 
-    margin: 0 0 2rem 0 !important; /* Strict 2rem bottom margin permanently prevents overlapping */
+    min-height: 340px !important; /* Makes the top chart card taller */
+    padding: 2rem 1rem !important; 
+    margin: 0 0 1.5rem 0 !important;
     border-radius: 16px !important;
     box-sizing: border-box !important;
-    position: relative !important; /* Locks Chart.js inside the card */
-    overflow: hidden !important; 
+    position: relative !important;
   }
-  
-  /* Lock the text inside the black card */
-  h2, .stat-value, [style*="font-size: 3rem"], [style*="font-size: 2.5rem"] {
-    font-size: 2rem !important;
+/* --- 3. THE BLACK STATS CARD (Perfect 2x2 Grid) --- */
+  #black-stats-card {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important; /* Forces 2 perfect columns */
+    gap: 2.5rem 1rem !important; /* Space between the rows and columns */
+    padding: 2.5rem 1.5rem !important;
+    margin: 0 0 2rem 0 !important;
+    border-radius: 16px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* --- 4. CENTER THE TEXT INSIDE --- */
+  /* Targets the invisible boxes holding your text and centers them */
+  #black-stats-card > div {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
     text-align: center !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Style the Percentages (+0.00%, -1.78%, etc.) */
+  #black-stats-card h2,
+  #black-stats-card .stat-value {
+    font-size: 2.2rem !important;
     line-height: 1.2 !important;
-    margin-top: 0.5rem !important;
-    margin-bottom: 0.5rem !important;
+    margin: 0.5rem 0 0 0 !important;
+    text-align: center !important;
+    width: 100% !important;
+  }
+
+  /* Style the Labels (1D RETURN, 1W RETURN, etc.) */
+  #black-stats-card p {
+    font-size: 0.85rem !important;
+    margin: 0 !important;
+    text-align: center !important;
+    opacity: 0.8; /* Dims the label slightly so the colored percentage pops */
+    width: 100% !important;
   }
   /* --- 5. TABLE HORIZONTAL SCROLL (Portfolios Page) --- */
   .table-scroll-wrapper {
@@ -763,13 +784,13 @@ body {
     min-width: 600px !important; 
   }
 
-  /* --- 6. CHARTS (Fit to Screen) --- */
-  canvas, img, svg {
+  /* --- 6. CHARTS --- */
+  canvas {
     width: 100% !important;
     max-width: 100% !important;
     
-    /* 👉 THE FIX: Prevents Chart.js from stretching too tall and bleeding out of the card */
-    max-height: 45vh !important; 
-    object-fit: contain !important; 
-  } 
+    /* 👉 THE FIX: Lets the line chart grow taller inside its new bigger card */
+    min-height: 250px !important; 
+    max-height: 350px !important; 
+  }
 }
